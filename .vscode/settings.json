@@ -1,0 +1,8 @@
+{
+  "prisma.showPrismaDataPlatformNotification": false,
+  "prisma.enabledExperimentalFeatures": [],
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "prisma.lint.enabled": false
+}

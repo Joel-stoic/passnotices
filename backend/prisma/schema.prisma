@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// TENANT (each advocate/law firm = one tenant)
+// ─────────────────────────────────────────────
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users        User[]
+  templates    NoticeTemplate[]
+  clients      Client[]
+  notices      Notice[]
+  gmailAccount GmailAccount?
+  whatsappAccount WhatsappAccount?
+  batches  Batch[] 
+  @@map("tenants")
+}
+
+// ─────────────────────────────────────────────
+// USER (advocate / staff logging into a tenant)
+// ─────────────────────────────────────────────
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(ADVOCATE)
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+enum UserRole {
+  ADVOCATE
+  STAFF
+}
+
+// ─────────────────────────────────────────────
+// NOTICE TEMPLATE (the 5 .docx templates per tenant)
+// ─────────────────────────────────────────────
+model NoticeTemplate {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  noticeType String   // e.g. "Section 25"
+  fileUrl    String   // storage path/URL to the .docx template
+  fields     Json     // expected placeholder fields, e.g. ["NAME","AMOUNT","DATE"]
+  createdAt  DateTime @default(now())
+
+  notices Notice[]
+
+  @@unique([tenantId, noticeType])
+  @@index([tenantId])
+  @@map("notice_templates")
+}
+
+// ─────────────────────────────────────────────
+// CLIENT (a debtor/member imported from Excel)
+// ─────────────────────────────────────────────
+model Client {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  batchId   String?  
+  batch     Batch?   @relation(fields: [batchId], references: [id]) 
+  name      String
+  mobile    String?
+  email     String?
+  address   String?
+  data      Json     // raw row data from Excel (amount, dates, account details, etc.)
+  createdAt DateTime @default(now())
+
+  notices Notice[]
+
+  @@index([tenantId])
+  @@index([batchId])
+  @@map("clients")
+}
+
+
+
+// ─────────────────────────────────────────────
+// NOTICE (one generated notice per client per upload)
+// ─────────────────────────────────────────────
+model Notice {
+  id           String       @id @default(cuid())
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  clientId     String
+  client       Client       @relation(fields: [clientId], references: [id])
+  templateId   String
+  template     NoticeTemplate @relation(fields: [templateId], references: [id])
+  fileUrl      String?      // generated .docx path/URL
+  status       NoticeStatus @default(DRAFT)
+  emailStatus  SendStatus   @default(NOT_SENT)
+  whatsappStatus SendStatus @default(NOT_SENT)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  sendLogs SendLog[]
+
+  @@index([tenantId])
+  @@index([clientId])
+  @@map("notices")
+}
+
+model Batch {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String
+  createdAt DateTime @default(now())
+
+  clients   Client[]
+
+  @@index([tenantId])
+  @@map("batches")
+}
+
+enum NoticeStatus {
+  DRAFT
+  GENERATED
+  REVIEWED
+}
+
+enum SendStatus {
+  NOT_SENT
+  PENDING
+  SENT
+  FAILED
+  DELIVERED
+}
+
+// ─────────────────────────────────────────────
+// SEND LOG (audit trail per send attempt)
+// ─────────────────────────────────────────────
+model SendLog {
+  id        String     @id @default(cuid())
+  noticeId  String
+  notice    Notice     @relation(fields: [noticeId], references: [id])
+  channel   Channel
+  status    SendStatus
+  errorMsg  String?
+  createdAt DateTime   @default(now())
+
+  @@index([noticeId])
+  @@map("send_logs")
+}
+
+enum Channel {
+  EMAIL
+  WHATSAPP
+}
+
+// ─────────────────────────────────────────────
+// GMAIL ACCOUNT (per tenant OAuth connection)
+// ─────────────────────────────────────────────
+model GmailAccount {
+  id           String   @id @default(cuid())
+  tenantId     String   @unique
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  emailAddress String
+  accessToken  String   // encrypted at rest (see lib/encryption.ts)
+  refreshToken String   // encrypted at rest
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@map("gmail_accounts")
+}
+
+// ─────────────────────────────────────────────
+// WHATSAPP ACCOUNT (per tenant Meta Cloud API connection)
+// ─────────────────────────────────────────────
+model WhatsappAccount {
+  id                String   @id @default(cuid())
+  tenantId          String   @unique
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+  phoneNumberId     String
+  businessAccountId String
+  accessToken       String   // encrypted at rest
+  createdAt         DateTime @default(now())
+
+  @@map("whatsapp_accounts")
+}
