@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --surface: #F8F8F6;
+    --foreground: #0A0A0A;
+    --text-secondary: #4A4A4A;
+    --accent: #1C3557;
+    --border: #E2E2E2;
+    --success: #2D6A4F;
+    --error: #C0392B;
+  }
+
+  .dark {
+    --background: #0A0A0A;
+    --surface: #111111;
+    --foreground: #F0F0F0;
+    --text-secondary: #888888;
+    --accent: #2A4A7F;
+    --border: #222222;
+    --success: #2D6A4F;
+    --error: #C0392B;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-[-0.02em];
+    line-height: 1.1;
+  }
+
+  p {
+    line-height: 1.7;
+  }
+}
