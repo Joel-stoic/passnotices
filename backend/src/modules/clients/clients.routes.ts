@@ -89,7 +89,7 @@ router.get(
         include: {
           batch: { select: { id: true, name: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "asc" },
       });
 
       return res.json({ success: true, clients });
@@ -152,10 +152,32 @@ router.delete(
         return res.status(404).json({ error: "Client not found" });
       }
 
+      // Delete related records first (cascade manually)
+      const notices = await prisma.notice.findMany({
+        where: { clientId: client.id },
+        select: { id: true },
+      });
+
+      const noticeIds = notices.map((n) => n.id);
+
+      // Delete send logs first
+      if (noticeIds.length > 0) {
+        await prisma.sendLog.deleteMany({
+          where: { noticeId: { in: noticeIds } },
+        });
+      }
+
+      // Delete notices
+      await prisma.notice.deleteMany({
+        where: { clientId: client.id },
+      });
+
+      // Now delete client
       await prisma.client.delete({ where: { id: client.id } });
 
       return res.json({ success: true, message: "Client deleted successfully" });
     } catch (error) {
+      console.error("Delete client error:", error);
       return res.status(500).json({ error: "Failed to delete client" });
     }
   }

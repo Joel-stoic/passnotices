@@ -110,6 +110,18 @@ export interface Client {
   address: string | null;
   data: Record<string, unknown>;
   createdAt: string;
+  batch?: {
+    id: string;
+    name: string;
+  };
+  notices?: GeneratedNotice[];
+}
+
+export interface Batch {
+  id: string;
+  name: string;
+  createdAt: string;
+  _count: { clients: number };
 }
 
 function authHeaders(): Record<string, string> {
@@ -119,13 +131,32 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function apiGetClients(): Promise<Client[]> {
-  const res = await fetch(`${BASE_URL}/api/clients`, {
-    headers: { ...authHeaders() },
-  });
+export async function apiGetClients(batchId?: string): Promise<Client[]> {
+  const url = batchId
+    ? `${BASE_URL}/api/clients?batchId=${batchId}`
+    : `${BASE_URL}/api/clients`;
+  const res = await fetch(url, { headers: authHeaders() });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to fetch clients");
   return data.clients as Client[];
+}
+
+export async function apiGetBatches(): Promise<Batch[]> {
+  const res = await fetch(`${BASE_URL}/api/clients/batches`, {
+    headers: authHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to fetch batches");
+  return data.batches;
+}
+
+export async function apiDeleteBatch(id: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/api/clients/batches/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to delete batch");
 }
 
 export async function apiGetClient(id: string): Promise<Client> {
@@ -158,6 +189,9 @@ export interface GeneratedNotice {
   emailStatus: string;
   whatsappStatus: string;
   createdAt: string;
+  template?: {
+    noticeType: string;
+  };
 }
 
 export async function apiGenerateNotice(
@@ -188,6 +222,25 @@ export async function apiGenerateNotice(
   return data.notice as GeneratedNotice;
 }
 
+export async function apiGenerateAndSendAll(
+  noticeType: string,
+  batchId: string
+): Promise<{
+  total: number;
+  succeeded: number;
+  skipped: number;
+  failed: number;
+  results: { name: string; email: string | null; status: string; reason?: string }[];
+}> {
+  const res = await fetch(`${BASE_URL}/api/notices/generate-and-send-all`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ noticeType, batchId }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Bulk send failed");
+  return data;
+}
 
 // ─── Gmail API ────────────────────────────────────────────────────────────────
 
@@ -226,4 +279,32 @@ export async function apiDisconnectGmail(): Promise<void> {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to disconnect Gmail");
+}
+
+// ─── Templates API ────────────────────────────────────────────────────────────
+
+export interface Template {
+  id: string;
+  tenantId: string;
+  noticeType: string;
+  fileUrl: string;
+  createdAt: string;
+}
+
+export async function apiGetTemplates(): Promise<Template[]> {
+  const res = await fetch(`${BASE_URL}/api/templates`, {
+    headers: { ...authHeaders() },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to fetch templates");
+  return data.templates;
+}
+
+export async function apiDeleteTemplate(id: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/api/templates/${id}`, {
+    method: "DELETE",
+    headers: { ...authHeaders() },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to delete template");
 }

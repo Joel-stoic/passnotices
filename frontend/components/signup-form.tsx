@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiSignup, saveSession } from "@/lib/api";
+import { toast } from "sonner";
 
 export function SignupForm() {
   const router = useRouter();
@@ -15,7 +16,6 @@ export function SignupForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +34,6 @@ export function SignupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     if (!validate()) return;
 
     setLoading(true);
@@ -43,7 +42,7 @@ export function SignupForm() {
       saveSession(token, user);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Signup failed. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Signup failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -159,13 +158,6 @@ export function SignupForm() {
             <p className="text-error text-xs mt-1">{fieldErrors.confirmPassword}</p>
           )}
         </div>
-
-        {/* Global API error */}
-        {error && (
-          <p className="text-error text-sm font-medium" role="alert">
-            {error}
-          </p>
-        )}
 
         {/* Submit */}
         <button

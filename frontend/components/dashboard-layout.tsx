@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Scale, LogOut, LayoutDashboard, Users, Settings } from "lucide-react";
+import { Scale, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import { clearSession, getStoredUser, type AuthUser } from "@/lib/api";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  activeNav?: "dashboard" | "clients" | "settings";
+  activeNav?: "dashboard" | "settings";
 }
 
 export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
@@ -48,10 +48,10 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
     return (
       <Link
         href={href}
-        className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 ${
+        className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 py-5 -mb-[1px] border-b-2 ${
           isActive
-            ? "text-accent dark:text-foreground"
-            : "text-secondary hover:text-foreground"
+            ? "border-accent text-foreground"
+            : "border-transparent text-secondary hover:text-foreground"
         }`}
       >
         {icon}
@@ -74,9 +74,8 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
           </Link>
 
           {/* Nav links */}
-          <nav className="hidden sm:flex items-center gap-6 flex-1">
+          <nav className="hidden sm:flex items-center gap-6 flex-1 self-end">
             {navLink("/dashboard", "dashboard", <LayoutDashboard className="w-4 h-4" />, "Dashboard")}
-            {navLink("/clients", "clients", <Users className="w-4 h-4" />, "Clients")}
             {navLink("/settings", "settings", <Settings className="w-4 h-4" />, "Settings")}
           </nav>
 
@@ -96,7 +95,7 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
       </header>
 
       {/* Page content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <main className="w-full max-w-[900px] mx-auto px-6 md:px-12 py-10">
         {children}
       </main>
     </div>

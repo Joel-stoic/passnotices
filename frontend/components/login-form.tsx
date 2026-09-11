@@ -5,26 +5,25 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiLogin, saveSession } from "@/lib/api";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     // Client-side validation
     if (!email.trim()) {
-      setError("Email is required");
+      toast.error("Email is required");
       return;
     }
     if (!password) {
-      setError("Password is required");
+      toast.error("Password is required");
       return;
     }
 
@@ -34,7 +33,7 @@ export function LoginForm() {
       saveSession(token, user);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Invalid email or password");
+      toast.error(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -61,9 +60,7 @@ export function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={`w-full px-4 py-2.5 bg-background text-foreground border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent ${
-              error ? "border-error" : "border-border"
-            }`}
+            className="w-full px-4 py-2.5 bg-background text-foreground border border-border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent"
             placeholder="you@lawfirm.com"
           />
         </div>
@@ -80,9 +77,7 @@ export function LoginForm() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full px-4 py-2.5 pr-10 bg-background text-foreground border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent ${
-                error ? "border-error" : "border-border"
-              }`}
+              className="w-full px-4 py-2.5 pr-10 bg-background text-foreground border border-border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent"
               placeholder="••••••••"
             />
             <button
@@ -95,13 +90,6 @@ export function LoginForm() {
             </button>
           </div>
         </div>
-
-        {/* Inline error */}
-        {error && (
-          <p className="text-error text-sm font-medium" role="alert">
-            {error}
-          </p>
-        )}
 
         {/* Submit */}
         <button

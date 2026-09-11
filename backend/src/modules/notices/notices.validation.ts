@@ -7,4 +7,5 @@ export const generateNoticeSchema = z.object({
 
 export const generateBulkSchema = z.object({
   noticeType: z.string().min(1),
+  batchId: z.string().optional(),
 });

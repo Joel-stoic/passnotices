@@ -1,6 +1,7 @@
 import XLSX from "xlsx";
 import { prisma } from "../../lib/prisma";
 import { Prisma } from "@prisma/client";
+import { validateExcelColumns, REQUIRED_COLUMNS } from "./excel.validation";
 
 export async function importExcelFile(
   filePath: string,
@@ -18,6 +19,16 @@ export async function importExcelFile(
 
   if (rows.length === 0) {
     throw new Error("Excel file contains no data");
+  }
+
+  // Validate required columns exist
+  const columns = Object.keys(rows[0]);
+  const { valid, missing } = validateExcelColumns(columns);
+  if (!valid) {
+    throw new Error(
+      `Missing required columns: ${missing.join(", ")}. ` +
+      `Make sure your Excel file has these columns: ${REQUIRED_COLUMNS.join(", ")}`
+    );
   }
 
   // Create a new batch for this upload

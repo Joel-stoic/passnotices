@@ -322,9 +322,15 @@ export async function generateBulkNotices(
 
 export async function generateAndSendAll(
   tenantId: string,
-  noticeType: string
+  noticeType: string,
+  batchId?: string
 ) {
-  const clients = await prisma.client.findMany({ where: { tenantId } });
+  const clients = await prisma.client.findMany({
+    where: {
+      tenantId,
+      ...(batchId ? { batchId } : {}),
+    },
+  });
 
   if (clients.length === 0) {
     throw new Error("No clients found. Upload an Excel file first.");

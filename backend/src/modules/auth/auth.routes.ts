@@ -35,7 +35,13 @@ router.post("/login", async (req, res) => {
       user: { id: user.id, email: user.email, role: user.role, tenantId: user.tenantId },
     });
   } catch (err: any) {
-    res.status(401).json({ error: err.message || "Login failed" });
+    // Never expose internal errors to client
+    const safeMessages = ["Invalid email or password", "Email already registered"];
+    const message = safeMessages.includes(err.message) 
+      ? err.message 
+      : "Something went wrong. Please try again.";
+    
+    res.status(401).json({ error: message });
   }
 });
 

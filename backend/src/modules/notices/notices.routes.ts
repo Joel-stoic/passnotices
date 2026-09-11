@@ -80,7 +80,8 @@ router.post(
       }
       const result = await generateAndSendAll(
         req.auth!.tenantId,
-        parsed.data.noticeType
+        parsed.data.noticeType,
+        parsed.data.batchId
       );
       return res.status(200).json({ success: true, ...result });
     } catch (error: any) {
