@@ -7,7 +7,7 @@ import clientsRouter from "./modules/clients/clients.routes";
 import excelRouter from "./modules/excel/excel.routes";
 import templateRouter from "./modules/templates/templates.routes";
 import noticeRouter from "./modules/notices/notices.routes";
-import gmailRouter from "./modules/gmail/gmail.routes"; 
+import gmailRouter from "./modules/gmail/gmail.routes";
 
 dotenv.config();
 
@@ -16,10 +16,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve generated notice files for download
-// (download route also handles auth — this is just static fallback)
-app.use("/uploads", express.static("uploads"));
-
 // API routes
 app.use("/api/auth", authRouter);
 app.use("/api/clients", clientsRouter);
@@ -27,6 +23,12 @@ app.use("/api/excel", excelRouter);
 app.use("/api/templates", templateRouter);
 app.use("/api/notices", noticeRouter);
 app.use("/api/gmail", gmailRouter);
+
+// Global error handler — never expose internals to client
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Something went wrong. Please try again." });
+});
 
 // Health check
 app.get("/health", (_req, res) => {
