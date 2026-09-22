@@ -1,15 +1,15 @@
 import { Router } from "express";
 import multer from "multer";
-import fs from "fs";
 
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { tenantMiddleware } from "../../middleware/tenant.middleware";
-import { importExcelFile } from "./excel.service";
+import { importExcelBuffer } from "./excel.service";
 
 const router = Router();
 
+// Memory storage — Excel is parsed in memory, never saved to disk or R2
 const upload = multer({
-  dest: "uploads/excel/",
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
@@ -24,25 +24,19 @@ router.post(
         return res.status(400).json({ error: "Excel file is required" });
       }
 
-      // batchName from form field — fallback to filename + date
       const batchName =
         (req.body.batchName as string)?.trim() ||
         `${req.file.originalname} — ${new Date().toLocaleDateString("en-IN")}`;
 
-      const result = await importExcelFile(
-        req.file.path,
+      const result = await importExcelBuffer(
+        req.file.buffer,
         req.auth!.tenantId,
         batchName
       );
 
-      fs.unlinkSync(req.file.path);
-
       return res.json({ success: true, ...result });
     } catch (error) {
       console.error("Excel import error:", error);
-      if (req.file?.path && fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
       return res.status(500).json({
         error: error instanceof Error ? error.message : "Failed to import Excel file",
       });

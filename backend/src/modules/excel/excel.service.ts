@@ -3,12 +3,13 @@ import { prisma } from "../../lib/prisma";
 import { Prisma } from "@prisma/client";
 import { validateExcelColumns, REQUIRED_COLUMNS } from "./excel.validation";
 
-export async function importExcelFile(
-  filePath: string,
+export async function importExcelBuffer(
+  buffer: Buffer,
   tenantId: string,
   batchName: string
 ) {
-  const workbook = XLSX.readFile(filePath);
+  // Parse Excel from buffer — no disk read needed
+  const workbook = XLSX.read(buffer, { type: "buffer" });
 
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -21,7 +22,7 @@ export async function importExcelFile(
     throw new Error("Excel file contains no data");
   }
 
-  // Validate required columns exist
+  // Validate required columns
   const columns = Object.keys(rows[0]);
   const { valid, missing } = validateExcelColumns(columns);
   if (!valid) {
@@ -31,12 +32,9 @@ export async function importExcelFile(
     );
   }
 
-  // Create a new batch for this upload
+  // Create batch
   const batch = await prisma.batch.create({
-    data: {
-      tenantId,
-      name: batchName,
-    },
+    data: { tenantId, name: batchName },
   });
 
   const clients = [];
@@ -58,7 +56,6 @@ export async function importExcelFile(
 
     const address = addressParts.length > 0 ? addressParts.join(", ") : null;
 
-    // Always create new client under this batch — no dedup across batches
     const client = await prisma.client.create({
       data: {
         tenantId,

@@ -1,4 +1,3 @@
-import fs from "fs";
 import { prisma } from "../../lib/prisma";
 import { uploadToR2, deleteFromR2 } from "../../lib/storage";
 
@@ -7,8 +6,11 @@ export async function createTemplate(
   noticeType: string,
   file: Express.Multer.File
 ) {
-  // Read file buffer from disk (multer temp file)
-  const buffer = fs.readFileSync(file.path);
+  // With memoryStorage, file.buffer contains the file — no disk read needed
+  const buffer = file.buffer;
+  if (!buffer || buffer.length === 0) {
+    throw new Error("File buffer is empty. Upload failed.");
+  }
 
   // Upload to R2
   const key = `templates/${tenantId}/${noticeType}-${Date.now()}.docx`;
@@ -18,10 +20,7 @@ export async function createTemplate(
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   );
 
-  // Clean up multer temp file
-  try { fs.unlinkSync(file.path); } catch {}
-
-  // If a template already exists for this notice type — replace it
+  // If template already exists for this notice type — replace it
   const existing = await prisma.noticeTemplate.findUnique({
     where: { tenantId_noticeType: { tenantId, noticeType } },
   });
@@ -30,7 +29,6 @@ export async function createTemplate(
     // Try to delete old file from R2 (ignore error if it was a local path)
     try { await deleteFromR2(existing.fileUrl); } catch {}
 
-    // Update existing record with new R2 key
     const updated = await prisma.noticeTemplate.update({
       where: { id: existing.id },
       data: { fileUrl: key },
@@ -38,7 +36,6 @@ export async function createTemplate(
     return updated;
   }
 
-  // Create new template record
   const template = await prisma.noticeTemplate.create({
     data: {
       tenantId,
@@ -61,6 +58,5 @@ export async function deleteTemplate(tenantId: string, templateId: string) {
   // Try to delete from R2 — ignore error if file was on local disk (old data)
   try { await deleteFromR2(template.fileUrl); } catch {}
 
-  // Always delete from DB
   await prisma.noticeTemplate.delete({ where: { id: template.id } });
 }

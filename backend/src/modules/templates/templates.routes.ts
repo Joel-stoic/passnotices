@@ -10,17 +10,10 @@ import { prisma } from "../../lib/prisma";
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, "uploads/templates/");
-  },
-  filename: (_req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
+// Use memory storage — no disk needed since we upload directly to R2
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (path.extname(file.originalname).toLowerCase() !== ".docx") {
       return cb(new Error("Only .docx files are allowed"));
@@ -47,7 +40,6 @@ router.get("/", authMiddleware, tenantMiddleware, async (req, res) => {
 
 // ─────────────────────────────────────────────
 // POST /api/templates
-// Upload a new .docx template (replaces if exists)
 // ─────────────────────────────────────────────
 
 router.post(
