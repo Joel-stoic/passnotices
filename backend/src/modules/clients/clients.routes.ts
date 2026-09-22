@@ -53,15 +53,44 @@ router.delete(
         return res.status(404).json({ error: "Batch not found" });
       }
 
-      // Delete all clients in batch first
-      await prisma.client.deleteMany({
+      // Get all clients in this batch
+      const clients = await prisma.client.findMany({
         where: { batchId: batch.id },
+        select: { id: true },
       });
+      const clientIds = clients.map((c) => c.id);
+
+      if (clientIds.length > 0) {
+        // Get all notices for these clients
+        const notices = await prisma.notice.findMany({
+          where: { clientId: { in: clientIds } },
+          select: { id: true },
+        });
+        const noticeIds = notices.map((n) => n.id);
+
+        // Delete send logs first
+        if (noticeIds.length > 0) {
+          await prisma.sendLog.deleteMany({
+            where: { noticeId: { in: noticeIds } },
+          });
+        }
+
+        // Delete notices
+        await prisma.notice.deleteMany({
+          where: { clientId: { in: clientIds } },
+        });
+
+        // Delete clients
+        await prisma.client.deleteMany({
+          where: { batchId: batch.id },
+        });
+      }
 
       await prisma.batch.delete({ where: { id: batch.id } });
 
       return res.json({ success: true, message: "Batch deleted" });
     } catch (error) {
+      console.error("Delete batch error:", error);
       return res.status(500).json({ error: "Failed to delete batch" });
     }
   }
