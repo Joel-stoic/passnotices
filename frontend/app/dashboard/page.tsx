@@ -27,8 +27,6 @@ function formatDate(iso: string) {
   });
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface Notice {
   id: string;
   status: "DRAFT" | "GENERATED" | "REVIEWED";
@@ -48,8 +46,6 @@ interface Client {
   createdAt: string;
   notices: Notice[];
 }
-
-// ─── Status helpers ───────────────────────────────────────────────────────────
 
 function NoticeStatusBadge({ status }: { status: Notice["status"] }) {
   const map: Record<Notice["status"], string> = {
@@ -74,8 +70,6 @@ function SendStatusIcon({ status }: { status: Notice["emailStatus"] }) {
   return <span className="w-3.5 h-3.5 rounded-full border border-border inline-block" />;
 }
 
-// ─── Client Detail Modal ──────────────────────────────────────────────────────
-
 function ClientModal({ client, onClose, onBack }: {
   client: Client;
   onClose: () => void;
@@ -87,7 +81,6 @@ function ClientModal({ client, onClose, onBack }: {
     return () => document.removeEventListener("keydown", onKey);
   }, [onBack]);
 
-  // Filter out top-level fields already shown
   const rawData = Object.entries(client.data).filter(
     ([k]) => !["NAME", "EMAIL ID", "MOBILE NO", "address"].includes(k)
   );
@@ -95,15 +88,11 @@ function ClientModal({ client, onClose, onBack }: {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onBack} />
-
       <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden">
-
-        {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
           <button
             onClick={onBack}
             className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            title="Back to batch"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -119,10 +108,7 @@ function ClientModal({ client, onClose, onBack }: {
           </button>
         </div>
 
-        {/* Body */}
         <div className="overflow-y-auto flex-1 p-5 space-y-5">
-
-          {/* Contact info */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {client.email && (
               <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border">
@@ -153,7 +139,6 @@ function ClientModal({ client, onClose, onBack }: {
             )}
           </div>
 
-          {/* Raw Excel data */}
           {rawData.length > 0 && (
             <div>
               <p className="text-xs font-medium text-foreground mb-2">Case data</p>
@@ -172,13 +157,11 @@ function ClientModal({ client, onClose, onBack }: {
             </div>
           )}
 
-          {/* Notices */}
           <div>
             <p className="text-xs font-medium text-foreground mb-2">
               Notices
               <span className="ml-1.5 text-muted-foreground font-normal">({client.notices?.length || 0})</span>
             </p>
-
             {(!client.notices || client.notices.length === 0) ? (
               <div className="flex items-center gap-2.5 p-4 rounded-lg border border-dashed border-border text-muted-foreground">
                 <FileText className="w-4 h-4 shrink-0" />
@@ -235,8 +218,6 @@ function ClientModal({ client, onClose, onBack }: {
   );
 }
 
-// ─── Batch Modal ──────────────────────────────────────────────────────────────
-
 function BatchModal({ batch, onClose }: { batch: Batch; onClose: () => void }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -273,10 +254,7 @@ function BatchModal({ batch, onClose }: { batch: Batch; onClose: () => void }) {
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-
         <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
-
-          {/* Header */}
           <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
             <div className="flex-1 min-w-0">
               <h2 className="text-sm font-semibold text-foreground truncate">{batch.name}</h2>
@@ -292,7 +270,6 @@ function BatchModal({ batch, onClose }: { batch: Batch; onClose: () => void }) {
             </button>
           </div>
 
-          {/* Body */}
           <div className="overflow-y-auto flex-1">
             {loading ? (
               <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -353,7 +330,6 @@ function BatchModal({ batch, onClose }: { batch: Batch; onClose: () => void }) {
         </div>
       </div>
 
-      {/* Client modal stacked on top */}
       {selectedClient && (
         <ClientModal
           client={selectedClient}
@@ -364,8 +340,6 @@ function BatchModal({ batch, onClose }: { batch: Batch; onClose: () => void }) {
     </>
   );
 }
-
-// ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -381,6 +355,7 @@ export default function DashboardPage() {
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [batchesError, setBatchesError] = useState("");
   const [openBatch, setOpenBatch] = useState<Batch | null>(null);
+  const [deletingBatchId, setDeletingBatchId] = useState<string | null>(null);
 
   const fetchBatches = useCallback(async () => {
     try {
@@ -474,12 +449,15 @@ export default function DashboardPage() {
   const handleDeleteBatch = async (e: React.MouseEvent, batchId: string, name: string) => {
     e.stopPropagation();
     if (!confirm(`Delete "${name}" and all its clients? This cannot be undone.`)) return;
+    setDeletingBatchId(batchId);
     try {
       await apiDeleteBatch(batchId);
       setBatches((prev) => prev.filter((b) => b.id !== batchId));
       toast.success("Batch deleted");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setDeletingBatchId(null);
     }
   };
 
@@ -613,7 +591,7 @@ export default function DashboardPage() {
                   {batches.map((batch) => (
                     <tr
                       key={batch.id}
-                      onClick={() => setOpenBatch(batch)}
+                      onClick={() => !deletingBatchId && setOpenBatch(batch)}
                       className="hover:bg-muted/30 transition-colors group cursor-pointer"
                     >
                       <td className="px-4 py-3.5">
@@ -631,14 +609,19 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={(e) => handleDeleteBatch(e, batch.id, batch.name)}
-                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                            disabled={deletingBatchId === batch.id}
+                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Delete batch"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            {deletingBatchId === batch.id
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              : <Trash2 className="w-3.5 h-3.5" />
+                            }
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setOpenBatch(batch); }}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors"
+                            disabled={!!deletingBatchId}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Open <ChevronRight className="w-3.5 h-3.5" />
                           </button>
@@ -653,7 +636,6 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      {/* Batch modal */}
       {openBatch && (
         <BatchModal
           batch={openBatch}
