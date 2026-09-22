@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import { Router } from "express";
 import multer from "multer";
@@ -6,7 +5,7 @@ import multer from "multer";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { tenantMiddleware } from "../../middleware/tenant.middleware";
 import { templateUploadSchema } from "./templates.validation";
-import { createTemplate } from "./templates.service";
+import { createTemplate, deleteTemplate } from "./templates.service";
 import { prisma } from "../../lib/prisma";
 
 const router = Router();
@@ -32,30 +31,23 @@ const upload = multer({
 
 // ─────────────────────────────────────────────
 // GET /api/templates
-// List all templates for the tenant
 // ─────────────────────────────────────────────
 
-router.get(
-  "/",
-  authMiddleware,
-  tenantMiddleware,
-  async (req, res) => {
-    try {
-      const templates = await prisma.noticeTemplate.findMany({
-        where: { tenantId: req.auth!.tenantId },
-        orderBy: { createdAt: "desc" },
-      });
-
-      return res.json({ success: true, templates });
-    } catch (error) {
-      return res.status(500).json({ error: "Failed to fetch templates" });
-    }
+router.get("/", authMiddleware, tenantMiddleware, async (req, res) => {
+  try {
+    const templates = await prisma.noticeTemplate.findMany({
+      where: { tenantId: req.auth!.tenantId },
+      orderBy: { createdAt: "desc" },
+    });
+    return res.json({ success: true, templates });
+  } catch {
+    return res.status(500).json({ error: "Failed to fetch templates" });
   }
-);
+});
 
 // ─────────────────────────────────────────────
 // POST /api/templates
-// Upload a new .docx template
+// Upload a new .docx template (replaces if exists)
 // ─────────────────────────────────────────────
 
 router.post(
@@ -89,41 +81,15 @@ router.post(
 
 // ─────────────────────────────────────────────
 // DELETE /api/templates/:id
-// Delete a template (and its file from disk)
 // ─────────────────────────────────────────────
 
-router.delete(
-  "/:id",
-  authMiddleware,
-  tenantMiddleware,
-  async (req, res) => {
-    try {
-      const template = await prisma.noticeTemplate.findFirst({
-        where: {
-          id: String(req.params.id),
-          tenantId: req.auth!.tenantId,
-        },
-      });
-
-      if (!template) {
-        return res.status(404).json({ error: "Template not found" });
-      }
-
-      // Delete file from disk
-      const rawUrl = template.fileUrl ?? "";
-      const relativePath = rawUrl.startsWith("/") ? rawUrl.slice(1) : rawUrl;
-      const filePath = path.resolve(process.cwd(), relativePath);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      await prisma.noticeTemplate.delete({ where: { id: template.id } });
-
-      return res.json({ success: true, message: "Template deleted" });
-    } catch (error) {
-      return res.status(500).json({ error: "Failed to delete template" });
-    }
+router.delete("/:id", authMiddleware, tenantMiddleware, async (req, res) => {
+  try {
+    await deleteTemplate(req.auth!.tenantId, String(req.params.id));
+    return res.json({ success: true, message: "Template deleted" });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message || "Failed to delete template" });
   }
-);
+});
 
 export default router;

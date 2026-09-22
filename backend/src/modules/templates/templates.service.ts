@@ -7,30 +7,43 @@ export async function createTemplate(
   noticeType: string,
   file: Express.Multer.File
 ) {
+  // Read file buffer from disk (multer temp file)
+  const buffer = fs.readFileSync(file.path);
+
+  // Upload to R2
+  const key = `templates/${tenantId}/${noticeType}-${Date.now()}.docx`;
+  await uploadToR2(
+    key,
+    buffer,
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  );
+
+  // Clean up multer temp file
+  try { fs.unlinkSync(file.path); } catch {}
+
+  // If a template already exists for this notice type — replace it
   const existing = await prisma.noticeTemplate.findUnique({
     where: { tenantId_noticeType: { tenantId, noticeType } },
   });
 
   if (existing) {
-    throw new Error(`Template already exists for ${noticeType}. Delete it first to replace.`);
+    // Try to delete old file from R2 (ignore error if it was a local path)
+    try { await deleteFromR2(existing.fileUrl); } catch {}
+
+    // Update existing record with new R2 key
+    const updated = await prisma.noticeTemplate.update({
+      where: { id: existing.id },
+      data: { fileUrl: key },
+    });
+    return updated;
   }
 
-  // Read file buffer from disk (multer saved it temporarily)
-  const buffer = fs.readFileSync(file.path);
-
-  // Upload to R2
-  const key = `templates/${tenantId}/${noticeType}-${Date.now()}.docx`;
-  await uploadToR2(key, buffer, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-
-  // Clean up temp file
-  fs.unlinkSync(file.path);
-
-  // Save R2 key as fileUrl in DB
+  // Create new template record
   const template = await prisma.noticeTemplate.create({
     data: {
       tenantId,
       noticeType,
-      fileUrl: key, // R2 key, not a local path
+      fileUrl: key,
       fields: [],
     },
   });
@@ -45,9 +58,9 @@ export async function deleteTemplate(tenantId: string, templateId: string) {
 
   if (!template) throw new Error("Template not found");
 
-  // Delete from R2
-  await deleteFromR2(template.fileUrl);
+  // Try to delete from R2 — ignore error if file was on local disk (old data)
+  try { await deleteFromR2(template.fileUrl); } catch {}
 
-  // Delete from DB
+  // Always delete from DB
   await prisma.noticeTemplate.delete({ where: { id: template.id } });
 }
