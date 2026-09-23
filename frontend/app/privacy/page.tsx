@@ -66,7 +66,9 @@ export default function PrivacyPolicy() {
           <section className="space-y-4">
             <h2 className="font-serif text-xl text-foreground">7. Contact Us</h2>
             <p>
-              If you have any questions or concerns regarding this Privacy Policy or our data practices, please contact us at: <a href="mailto:hello@passnotice.com" className="text-accent hover:underline">hello@passnotice.com</a>.
+              If you have any questions or concerns regarding this Privacy Policy or our data practices, please contact us at: <a href="mailto:joelimmanual.off@gmail.com" className="text-accent hover:underline">
+                joelimmanual.off@gmail.com
+              </a>.
             </p>
           </section>
         </div>
