@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Loader2, AlertCircle, Trash2, ChevronRight,
-  Upload, Users, Calendar, FolderOpen, X,
+  Upload, Users, Calendar, FolderOpen,
   FileSpreadsheet, TrendingUp, AlertTriangle,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
