@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Loader2, AlertCircle, Trash2, ChevronRight,
   Upload, Users, Calendar, FolderOpen, X,
-  Mail, Phone, MapPin, FileText, ArrowLeft,
-  CheckCircle2, Clock, XCircle, Send,
+  FileSpreadsheet, TrendingUp, AlertTriangle,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { apiGetBatches, apiDeleteBatch, type Batch } from "@/lib/api";
@@ -27,319 +26,75 @@ function formatDate(iso: string) {
   });
 }
 
-interface Notice {
-  id: string;
-  status: "DRAFT" | "GENERATED" | "REVIEWED";
-  emailStatus: "NOT_SENT" | "PENDING" | "SENT" | "FAILED" | "DELIVERED";
-  whatsappStatus: "NOT_SENT" | "PENDING" | "SENT" | "FAILED" | "DELIVERED";
-  createdAt: string;
-  template: { noticeType: string };
+function formatRelative(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 2) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return formatDate(iso);
 }
 
-interface Client {
-  id: string;
+// ─── Delete confirm dialog ───────────────────────────────────────────────────
+
+function DeleteConfirmDialog({
+  name,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
   name: string;
-  mobile: string | null;
-  email: string | null;
-  address: string | null;
-  data: Record<string, unknown>;
-  createdAt: string;
-  notices: Notice[];
-}
-
-function NoticeStatusBadge({ status }: { status: Notice["status"] }) {
-  const map: Record<Notice["status"], string> = {
-    DRAFT: "bg-muted text-muted-foreground",
-    GENERATED: "bg-blue-500/10 text-blue-500",
-    REVIEWED: "bg-green-500/10 text-green-600",
-  };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${map[status]}`}>
-      {status.charAt(0) + status.slice(1).toLowerCase()}
-    </span>
-  );
-}
-
-function SendStatusIcon({ status }: { status: Notice["emailStatus"] }) {
-  if (status === "SENT" || status === "DELIVERED")
-    return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
-  if (status === "FAILED")
-    return <XCircle className="w-3.5 h-3.5 text-destructive" />;
-  if (status === "PENDING")
-    return <Clock className="w-3.5 h-3.5 text-amber-500" />;
-  return <span className="w-3.5 h-3.5 rounded-full border border-border inline-block" />;
-}
-
-function ClientModal({ client, onClose, onBack }: {
-  client: Client;
-  onClose: () => void;
-  onBack: () => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading: boolean;
 }) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onBack(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onBack]);
-
-  const rawData = Object.entries(client.data).filter(
-    ([k]) => !["NAME", "EMAIL ID", "MOBILE NO", "address"].includes(k)
-  );
+  }, [onCancel]);
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onBack} />
-      <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
-          <button
-            onClick={onBack}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-foreground truncate">{client.name}</h2>
-            <p className="text-xs text-muted-foreground">Client details</p>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative z-10 bg-[#111] border border-border rounded-xl shadow-2xl w-full max-w-sm p-6">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 mt-0.5">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="overflow-y-auto flex-1 p-5 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {client.email && (
-              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border">
-                <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground mb-0.5">Email</p>
-                  <p className="text-xs font-medium text-foreground truncate">{client.email}</p>
-                </div>
-              </div>
-            )}
-            {client.mobile && (
-              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border">
-                <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground mb-0.5">Mobile</p>
-                  <p className="text-xs font-medium text-foreground">{client.mobile}</p>
-                </div>
-              </div>
-            )}
-            {client.address && (
-              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border sm:col-span-2">
-                <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="text-[10px] text-muted-foreground mb-0.5">Address</p>
-                  <p className="text-xs font-medium text-foreground">{client.address}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {rawData.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-foreground mb-2">Case data</p>
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-xs">
-                  <tbody className="divide-y divide-border">
-                    {rawData.map(([key, val]) => (
-                      <tr key={key} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-3 py-2 text-muted-foreground w-1/2 font-medium">{key}</td>
-                        <td className="px-3 py-2 text-foreground">{String(val ?? "—")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
           <div>
-            <p className="text-xs font-medium text-foreground mb-2">
-              Notices
-              <span className="ml-1.5 text-muted-foreground font-normal">({client.notices?.length || 0})</span>
+            <p className="text-sm font-semibold text-foreground mb-1">Delete batch?</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              <span className="text-foreground font-medium">&ldquo;{name}&rdquo;</span> and all its clients and notices will be permanently deleted. This cannot be undone.
             </p>
-            {(!client.notices || client.notices.length === 0) ? (
-              <div className="flex items-center gap-2.5 p-4 rounded-lg border border-dashed border-border text-muted-foreground">
-                <FileText className="w-4 h-4 shrink-0" />
-                <p className="text-xs">No notices generated for this client yet.</p>
-              </div>
-            ) : (
-              <div className="rounded-lg border border-border overflow-hidden">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="bg-muted/50 border-b border-border">
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground">Type</th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground">Status</th>
-                      <th className="px-3 py-2 text-center text-[10px] font-medium text-muted-foreground">
-                        <Mail className="w-3 h-3 inline" />
-                      </th>
-                      <th className="px-3 py-2 text-center text-[10px] font-medium text-muted-foreground">
-                        <Send className="w-3 h-3 inline" />
-                      </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {client.notices.map((notice) => (
-                      <tr key={notice.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-3 py-2.5 font-medium text-foreground">
-                          {notice.template.noticeType.replace(/_/g, " ")}
-                        </td>
-                        <td className="px-3 py-2.5">
-                          <NoticeStatusBadge status={notice.status} />
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <div className="flex justify-center">
-                            <SendStatusIcon status={notice.emailStatus} />
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-center">
-                          <div className="flex justify-center">
-                            <SendStatusIcon status={notice.whatsappStatus} />
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-muted-foreground">
-                          {formatDate(notice.createdAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted rounded-lg transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-70"
+          >
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+            Delete
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function BatchModal({ batch, onClose }: { batch: Batch; onClose: () => void }) {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !selectedClient) onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose, selectedClient]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`${BASE_URL}/api/clients?batchId=${batch.id}`, {
-          headers: authHeaders(),
-        });
-        if (!res.ok) throw new Error("Failed to load clients");
-        const data = await res.json();
-        setClients(data.clients ?? []);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to load clients");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [batch.id]);
-
-  return (
-    <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-sm font-semibold text-foreground truncate">{batch.name}</h2>
-              <p className="text-xs text-muted-foreground">
-                {batch._count.clients} {batch._count.clients === 1 ? "client" : "clients"} · Uploaded {formatDate(batch.createdAt)}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="overflow-y-auto flex-1">
-            {loading ? (
-              <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="text-sm">Loading clients...</span>
-              </div>
-            ) : error ? (
-              <div className="flex flex-col items-center gap-2 py-16 text-center px-5">
-                <AlertCircle className="w-5 h-5 text-destructive" />
-                <p className="text-sm text-destructive">{error}</p>
-              </div>
-            ) : clients.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-16 text-center px-5">
-                <Users className="w-7 h-7 text-muted-foreground/40" />
-                <p className="text-sm font-medium text-foreground">No clients in this batch</p>
-              </div>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-muted/50 border-b border-border sticky top-0">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Mobile</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Notices</th>
-                    <th className="px-4 py-3 w-8" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {clients.map((client) => (
-                    <tr
-                      key={client.id}
-                      onClick={() => setSelectedClient(client)}
-                      className="hover:bg-muted/40 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-4 py-3 font-medium text-foreground">{client.name}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">{client.mobile ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs truncate max-w-[160px]">
-                        {client.email ?? "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        {client.notices?.length > 0 ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary">
-                            {client.notices.length}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">None</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {selectedClient && (
-        <ClientModal
-          client={selectedClient}
-          onBack={() => setSelectedClient(null)}
-          onClose={onClose}
-        />
-      )}
-    </>
-  );
-}
+// ─── Main dashboard page ──────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -350,12 +105,15 @@ export default function DashboardPage() {
   const [batchName, setBatchName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(true);
   const [batchesError, setBatchesError] = useState("");
-  const [openBatch, setOpenBatch] = useState<Batch | null>(null);
-  const [deletingBatchId, setDeletingBatchId] = useState<string | null>(null);
+
+  // Delete flow
+  const [deleteTarget, setDeleteTarget] = useState<Batch | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchBatches = useCallback(async () => {
     try {
@@ -372,11 +130,14 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchBatches(); }, [fetchBatches]);
 
+  // Drag-and-drop
   useEffect(() => {
     const zone = dropZoneRef.current;
     if (!zone) return;
     const onDragOver = (e: DragEvent) => { e.preventDefault(); setIsDragging(true); };
-    const onDragLeave = () => setIsDragging(false);
+    const onDragLeave = (e: DragEvent) => {
+      if (!zone.contains(e.relatedTarget as Node)) setIsDragging(false);
+    };
     const onDrop = (e: DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
@@ -396,14 +157,18 @@ export default function DashboardPage() {
 
   const selectFile = (selected: File) => {
     setFile(selected);
+    setValidationError(null);
     const base = selected.name.replace(/\.(xlsx|xls)$/i, "");
-    const date = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    const date = new Date().toLocaleDateString("en-IN", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
     setBatchName(`${base} — ${date}`);
   };
 
   const clearFile = () => {
     setFile(null);
     setBatchName("");
+    setValidationError(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -414,17 +179,26 @@ export default function DashboardPage() {
 
   const handleUpload = async () => {
     if (!file) return;
+    setValidationError(null);
+
+    // Validate client-side
     try {
       const buffer = await file.arrayBuffer();
       const wb = XLSX.read(buffer, { type: "array" });
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
         wb.Sheets[wb.SheetNames[0]], { defval: "" }
       );
-      if (rows.length === 0) { toast.error("File has no data rows."); return; }
+      if (rows.length === 0) {
+        setValidationError("File has no data rows.");
+        return;
+      }
       const missing = REQUIRED_COLUMNS.filter((c) => !Object.keys(rows[0]).includes(c));
-      if (missing.length > 0) { toast.error(`Missing columns: ${missing.join(", ")}`); return; }
+      if (missing.length > 0) {
+        setValidationError(`Missing columns: ${missing.join(", ")}`);
+        return;
+      }
     } catch {
-      toast.error("Could not read file. Make sure it's a valid .xlsx or .xls.");
+      setValidationError("Could not read file. Make sure it's a valid .xlsx or .xls.");
       return;
     }
 
@@ -438,7 +212,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(typeof data.error === "string" ? data.error : "Upload failed");
-      toast.success("Clients imported");
+      toast.success(`Imported ${data.importedClients} clients`);
       router.push(`/batch/${data.batchId}`);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -446,29 +220,31 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeleteBatch = async (e: React.MouseEvent, batchId: string, name: string) => {
-    e.stopPropagation();
-    if (!confirm(`Delete "${name}" and all its clients? This cannot be undone.`)) return;
-    setDeletingBatchId(batchId);
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeletingId(deleteTarget.id);
     try {
-      await apiDeleteBatch(batchId);
-      setBatches((prev) => prev.filter((b) => b.id !== batchId));
+      await apiDeleteBatch(deleteTarget.id);
+      setBatches((prev) => prev.filter((b) => b.id !== deleteTarget.id));
       toast.success("Batch deleted");
+      setDeleteTarget(null);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to delete");
     } finally {
-      setDeletingBatchId(null);
+      setDeletingId(null);
     }
   };
+
+  // Derived stats
+  const totalClients = batches.reduce((s, b) => s + b._count.clients, 0);
 
   if (loadingBatches) {
     return (
       <DashboardLayout activeNav="dashboard">
-        <div className="space-y-10 max-w-5xl">
-          <div className="h-[200px] rounded-lg bg-muted animate-pulse" />
-          <div className="space-y-3">
-            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-            {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-muted rounded-md animate-pulse" />)}
+        <div className="space-y-8 max-w-4xl">
+          <div className="h-[180px] rounded-xl bg-muted/30 animate-pulse" />
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => <div key={i} className="h-[60px] bg-muted/20 rounded-lg animate-pulse" />)}
           </div>
         </div>
       </DashboardLayout>
@@ -477,72 +253,142 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout activeNav="dashboard">
-      <div className="space-y-10 max-w-5xl">
+      <div className="space-y-10 max-w-4xl">
 
-        {/* Import */}
+        {/* ── Summary stats ─────────────────────────────── */}
+        {batches.length > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-border bg-muted/10 px-5 py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground font-medium">Batches</span>
+              </div>
+              <p className="text-2xl font-semibold text-foreground">{batches.length}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/10 px-5 py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground font-medium">Clients</span>
+              </div>
+              <p className="text-2xl font-semibold text-foreground">{totalClients}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/10 px-5 py-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground font-medium">Latest</span>
+              </div>
+              <p className="text-sm font-medium text-foreground truncate">
+                {formatRelative(batches[0].createdAt)}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Upload zone ───────────────────────────────── */}
         <section>
-          <div className="mb-4">
+          <div className="mb-3">
             <h2 className="text-sm font-semibold text-foreground">Import clients</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Upload an Excel file with your client data.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Upload a spreadsheet — one row per client.
+            </p>
           </div>
 
           <div
             ref={dropZoneRef}
             onClick={() => !file && fileInputRef.current?.click()}
             className={[
-              "border-2 border-dashed rounded-lg transition-all",
-              "bg-muted/30 hover:bg-muted/50",
-              isDragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-border",
-              !file ? "cursor-pointer" : "",
+              "rounded-xl border-2 border-dashed transition-all duration-200",
+              isDragging
+                ? "border-primary bg-primary/5 scale-[1.005]"
+                : file
+                  ? "border-border bg-muted/10 cursor-default"
+                  : "border-border/60 bg-muted/10 hover:border-border hover:bg-muted/20 cursor-pointer",
             ].join(" ")}
           >
-            <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
             {!file ? (
-              <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Upload className="w-5 h-5 text-primary" />
+              /* Empty state */
+              <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-muted/40 border border-border flex items-center justify-center mb-5">
+                  <FileSpreadsheet className="w-6 h-6 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium text-foreground mb-1">Drop your Excel file here</p>
-                <p className="text-xs text-muted-foreground mb-4">.xlsx or .xls · max 10 MB</p>
-                <p className="text-[11px] text-muted-foreground/70">
-                  Required columns: {REQUIRED_COLUMNS.join(" · ")}
+                <p className="text-sm font-semibold text-foreground mb-1">
+                  {isDragging ? "Drop to import" : "Drop your spreadsheet here"}
                 </p>
+                <p className="text-xs text-muted-foreground mb-5">
+                  or <span className="text-primary underline underline-offset-2">browse files</span> · .xlsx or .xls · max 10 MB
+                </p>
+                <div className="flex flex-wrap justify-center gap-1.5">
+                  {REQUIRED_COLUMNS.map((col) => (
+                    <span
+                      key={col}
+                      className="px-2 py-0.5 rounded-md bg-muted/50 border border-border/60 text-[10px] font-mono text-muted-foreground"
+                    >
+                      {col}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground/60 mt-2">Required columns</p>
               </div>
             ) : (
+              /* File selected state */
               <div className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                    <FolderOpen className="w-5 h-5 text-primary" />
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate mb-3">{file.name}</p>
+
+                  <div className="flex-1 min-w-0 space-y-3">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">Batch name</label>
+                      <p className="text-sm font-semibold text-foreground truncate">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(file.size / 1024).toFixed(0)} KB
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">
+                        Batch name
+                      </label>
                       <input
                         type="text"
                         value={batchName}
                         onChange={(e) => setBatchName(e.target.value)}
-                        placeholder="Name this batch..."
-                        className="w-full max-w-sm text-sm px-3 py-2 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                        placeholder="Name this import…"
+                        className="w-full max-w-sm text-sm px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                       />
                     </div>
+
+                    {validationError && (
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/5 border border-red-500/20 text-red-400">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <p className="text-xs">{validationError}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); clearFile(); }}
-                      className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-                    >
-                      Remove
-                    </button>
+
+                  <div className="flex flex-col items-end gap-2 shrink-0">
                     <button
                       onClick={(e) => { e.stopPropagation(); handleUpload(); }}
                       disabled={uploading}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-60 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-60 transition-colors"
                     >
                       {uploading
-                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Importing...</>
+                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Importing…</>
                         : <><Upload className="w-4 h-4" /> Import</>}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); clearFile(); }}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Remove file
                     </button>
                   </div>
                 </div>
@@ -551,77 +397,102 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Batch list */}
+        {/* ── Batch list ────────────────────────────────── */}
         <section>
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold text-foreground">Recent uploads</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {batches.length} {batches.length === 1 ? "batch" : "batches"} imported
-            </p>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Recent uploads</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {batches.length === 0
+                  ? "No batches yet"
+                  : `${batches.length} ${batches.length === 1 ? "batch" : "batches"}`}
+              </p>
+            </div>
           </div>
 
           {batchesError ? (
-            <div className="flex flex-col items-center gap-3 py-12 border border-border rounded-lg">
-              <AlertCircle className="w-5 h-5 text-destructive" />
-              <p className="text-sm text-destructive">{batchesError}</p>
-              <button onClick={fetchBatches} className="text-xs font-medium text-primary hover:underline">Try again</button>
+            <div className="flex flex-col items-center gap-3 py-12 rounded-xl border border-border">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+              <p className="text-sm text-red-400">{batchesError}</p>
+              <button
+                onClick={fetchBatches}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Retry
+              </button>
             </div>
           ) : batches.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 border border-dashed border-border rounded-lg text-center">
-              <FolderOpen className="w-8 h-8 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-foreground">No batches yet</p>
-              <p className="text-xs text-muted-foreground">Import an Excel file above to get started.</p>
+            <div className="flex flex-col items-center gap-2.5 py-16 border border-dashed border-border/60 rounded-xl text-center">
+              <FolderOpen className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-sm font-semibold text-foreground">No batches yet</p>
+              <p className="text-xs text-muted-foreground">Import a spreadsheet above to get started.</p>
             </div>
           ) : (
-            <div className="border border-border rounded-lg overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-muted/50 border-b border-border">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Batch</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><Users className="w-3 h-3" /> Clients</span>
+                  <tr className="bg-muted/20 border-b border-border">
+                    <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Batch</th>
+                    <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-3 h-3" /> Clients
+                      </span>
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Uploaded</span>
+                    <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3" /> Uploaded
+                      </span>
                     </th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border/50">
                   {batches.map((batch) => (
                     <tr
                       key={batch.id}
-                      onClick={() => !deletingBatchId && setOpenBatch(batch)}
-                      className="hover:bg-muted/30 transition-colors group cursor-pointer"
+                      onClick={() => router.push(`/batch/${batch.id}`)}
+                      className="hover:bg-muted/20 transition-colors group cursor-pointer"
                     >
-                      <td className="px-4 py-3.5">
-                        <span className="font-medium text-foreground truncate max-w-[280px] block" title={batch.name}>
-                          {batch.name}
-                        </span>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-muted/40 border border-border/60 flex items-center justify-center shrink-0">
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-muted-foreground" />
+                          </div>
+                          <span className="font-medium text-foreground truncate max-w-[240px]" title={batch.name}>
+                            {batch.name}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-4 py-3.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                      <td className="px-4 py-4">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
+                          <Users className="w-3 h-3" />
                           {batch._count.clients}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-muted-foreground text-xs">{formatDate(batch.createdAt)}</td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="text-xs text-foreground">{formatDate(batch.createdAt)}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatRelative(batch.createdAt)}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={(e) => handleDeleteBatch(e, batch.id, batch.name)}
-                            disabled={deletingBatchId === batch.id}
-                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget(batch);
+                            }}
+                            className="p-1.5 rounded-md text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
                             title="Delete batch"
                           >
-                            {deletingBatchId === batch.id
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              : <Trash2 className="w-3.5 h-3.5" />
-                            }
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setOpenBatch(batch); }}
-                            disabled={!!deletingBatchId}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/batch/${batch.id}`);
+                            }}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors"
                           >
                             Open <ChevronRight className="w-3.5 h-3.5" />
                           </button>
@@ -634,12 +505,16 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
       </div>
 
-      {openBatch && (
-        <BatchModal
-          batch={openBatch}
-          onClose={() => setOpenBatch(null)}
+      {/* ── Delete confirm dialog ──────────────────────── */}
+      {deleteTarget && (
+        <DeleteConfirmDialog
+          name={deleteTarget.name}
+          loading={deletingId === deleteTarget.id}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
     </DashboardLayout>

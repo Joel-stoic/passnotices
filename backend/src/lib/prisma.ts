@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 
 // Singleton pattern — prevents multiple client instances during dev hot-reload
