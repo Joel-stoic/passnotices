@@ -46,11 +46,11 @@ export function Footer() {
           {/* Contact */}
           <div className="flex flex-col space-y-3">
             <p className="text-xs font-bold uppercase tracking-widest text-secondary mb-1">Contact</p>
-            <a href="mailto:hello@passnotice.com" className="text-sm text-secondary hover:text-foreground transition-colors duration-150">
-              hello@passnotice.com
+            <a href="mailto:joelimmanual.off@gmail.com" className="text-sm text-secondary hover:text-foreground transition-colors duration-150">
+              joelimmanual.off@gmail.com
             </a>
-            <a href="https://wa.me/919999999999" className="text-sm text-secondary hover:text-foreground transition-colors duration-150">
-              WhatsApp: +91 99999 99999
+            <a href="https://wa.me/918270641480" className="text-sm text-secondary hover:text-foreground transition-colors duration-150">
+              WhatsApp: +91 82706 41480
             </a>
           </div>
 
