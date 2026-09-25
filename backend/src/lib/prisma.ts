@@ -7,7 +7,7 @@ declare global {
   var prismaBase: PrismaClient | undefined;
 }
 
-const prismaBase =
+export const prismaBase =
   global.prismaBase ||
   new PrismaClient({
     datasources: {

@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { prisma } from "../../lib/prisma";
+import { prisma, prismaBase } from "../../lib/prisma";
 import { SignupInput, LoginInput } from "./auth.validation";
 
 const SALT_ROUNDS = 10;
@@ -13,14 +13,14 @@ function signToken(payload: { userId: string; tenantId: string; role: string }) 
 }
 
 export async function signup(input: SignupInput) {
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  const existing = await prisma.user.findFirst({ where: { email: input.email } });
   if (existing) {
     throw new Error("Email already registered");
   }
 
   const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prismaBase.$transaction(async (tx) => {
     const tenant = await tx.tenant.create({
       data: { name: input.tenantName },
     });
@@ -47,7 +47,7 @@ export async function signup(input: SignupInput) {
 }
 
 export async function login(input: LoginInput) {
-  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const user = await prisma.user.findFirst({ where: { email: input.email } });
   if (!user) {
     throw new Error("Invalid email or password");
   }
