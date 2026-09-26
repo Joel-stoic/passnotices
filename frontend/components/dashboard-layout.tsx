@@ -48,11 +48,10 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
     return (
       <Link
         href={href}
-        className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 py-5 -mb-[1px] border-b-2 ${
-          isActive
+        className={`flex items-center gap-1.5 text-sm font-medium transition-colors duration-150 py-5 -mb-[1px] border-b-2 ${isActive
             ? "border-accent text-foreground"
             : "border-transparent text-secondary hover:text-foreground"
-        }`}
+          }`}
       >
         {icon}
         {label}
@@ -95,7 +94,7 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
       </header>
 
       {/* Page content */}
-      <main className="w-full max-w-[900px] mx-auto px-6 md:px-12 py-10">
+      <main className="w-full max-w-[1280px] mx-auto px-8 py-9">
         {children}
       </main>
     </div>
