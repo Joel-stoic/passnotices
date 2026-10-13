@@ -114,9 +114,9 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout activeNav="settings">
-      <div className="max-w-2xl space-y-8">
+      <div className="max-w-2xl space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-[22px] font-serif font-semibold text-foreground tracking-tight">Settings</h1>
+          <h1 className="text-xl sm:text-[22px] font-serif font-semibold text-foreground tracking-tight">Settings</h1>
           <p className="text-xs text-muted-foreground mt-1">Manage your Gmail connection and notice templates.</p>
         </div>
 
@@ -124,28 +124,28 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-[13px] font-semibold text-foreground mb-3">Gmail connection</h2>
           <div className="bg-[#141418] border border-[#222228] rounded-xl overflow-hidden">
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {gmailConnected ? (
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
                       <CheckCircle2 className="w-4 h-4 text-green-400" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">Connected</p>
-                      <p className="text-xs text-muted-foreground">{gmailAddress}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-xs">{gmailAddress}</p>
                     </div>
                   </div>
                   <button onClick={() => { if (confirm("Disconnect Gmail?")) disconnectGmailMutation.mutate(); }}
                     disabled={disconnectGmailMutation.isPending}
-                    className="text-xs text-muted-foreground hover:text-red-400 transition-colors disabled:opacity-50">
+                    className="text-xs text-muted-foreground hover:text-red-400 transition-colors disabled:opacity-50 self-start sm:self-auto py-1">
                     {disconnectGmailMutation.isPending ? "Disconnecting…" : "Disconnect"}
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#1a1a20] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-full bg-[#1a1a20] flex items-center justify-center shrink-0">
                       <Mail className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div>
@@ -154,13 +154,13 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button onClick={() => connectGmailMutation.mutate()} disabled={connectGmailMutation.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg disabled:opacity-60 transition-colors shrink-0">
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg disabled:opacity-60 transition-colors shrink-0 w-full sm:w-auto">
                     {connectGmailMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Connecting…</> : "Connect Gmail"}
                   </button>
                 </div>
               )}
             </div>
-            <div className="flex items-start gap-2.5 px-5 py-3 bg-[#0c0c0f] border-t border-[#1a1a20]">
+            <div className="flex items-start gap-2.5 px-4 sm:px-5 py-3 bg-[#0c0c0f] border-t border-[#1a1a20]">
               <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Google will show a security warning — click <strong className="text-foreground">Advanced</strong> → <strong className="text-foreground">Go to PassNotice</strong> to continue.
@@ -175,21 +175,21 @@ export default function SettingsPage() {
           <div className="space-y-3">
 
             {/* Upload */}
-            <div className="bg-[#141418] border border-[#222228] rounded-xl p-5">
+            <div className="bg-[#141418] border border-[#222228] rounded-xl p-4 sm:p-5">
               <p className="text-xs font-medium text-foreground mb-3">Upload a template</p>
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <select value={noticeType} onChange={(e) => setNoticeType(e.target.value)}
-                  className="flex-1 px-3 py-2.5 text-xs bg-[#0c0c0f] text-foreground border border-[#222228] rounded-lg focus:outline-none focus:border-blue-400/50 transition-all">
+                  className="w-full sm:flex-1 px-3 py-2.5 text-xs bg-[#0c0c0f] text-foreground border border-[#222228] rounded-lg focus:outline-none focus:border-blue-400/50 transition-all">
                   <option value="" disabled>Select notice type…</option>
                   {NOTICE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
                 <button onClick={() => fileInputRef.current?.click()}
-                  className={`flex-1 px-3 py-2.5 text-xs border rounded-lg text-left truncate transition-all ${file ? "border-blue-500/30 text-foreground bg-blue-500/5" : "border-[#222228] text-muted-foreground hover:border-blue-400/30"}`}>
+                  className={`w-full sm:flex-1 px-3 py-2.5 text-xs border rounded-lg text-left truncate transition-all ${file ? "border-blue-500/30 text-foreground bg-blue-500/5" : "border-[#222228] text-muted-foreground hover:border-blue-400/30"}`}>
                   <input ref={fileInputRef} type="file" accept=".docx" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setUploadError(""); }} className="hidden" />
                   {file ? file.name : "Choose .docx file"}
                 </button>
                 <button onClick={() => uploadMutation.mutate()} disabled={!file || !noticeType || uploadMutation.isPending}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors shrink-0">
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0">
                   {uploadMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><UploadCloud className="w-3.5 h-3.5" /> Upload</>}
                 </button>
               </div>
@@ -209,37 +209,40 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="bg-[#141418] border border-[#222228] rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-white/[0.02] border-b border-[#1a1a20]">
-                      <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Notice type</th>
-                      <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uploaded</th>
-                      <th className="px-5 py-2.5 w-12" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1a1a20]">
-                    {(templates as Template[]).map((t) => {
-                      const label = NOTICE_TYPES.find((n) => n.value === t.noticeType)?.label ?? t.noticeType;
-                      return (
-                        <tr key={t.id} className="hover:bg-blue-500/[0.04] transition-colors group">
-                          <td className="px-5 py-3.5">
-                            <div className="flex items-center gap-2.5">
-                              <FileText className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                              <span className="text-[13px] font-medium text-foreground">{label}</span>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3.5 text-xs text-muted-foreground">{formatDate(t.createdAt)}</td>
-                          <td className="px-5 py-3.5 text-right">
-                            <button onClick={() => { if (confirm(`Delete "${label}"?`)) deleteMutation.mutate(t.id); }}
-                              className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all ml-auto">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[400px]">
+                    <thead>
+                      <tr className="bg-white/[0.02] border-b border-[#1a1a20]">
+                        <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Notice type</th>
+                        <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uploaded</th>
+                        <th className="px-4 sm:px-5 py-2.5 w-12" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#1a1a20]">
+                      {(templates as Template[]).map((t) => {
+                        const label = NOTICE_TYPES.find((n) => n.value === t.noticeType)?.label ?? t.noticeType;
+                        return (
+                          <tr key={t.id} className="hover:bg-blue-500/[0.04] transition-colors group">
+                            <td className="px-4 sm:px-5 py-3.5">
+                              <div className="flex items-center gap-2.5">
+                                <FileText className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                                <span className="text-[13px] font-medium text-foreground">{label}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 sm:px-5 py-3.5 text-xs text-muted-foreground">{formatDate(t.createdAt)}</td>
+                            <td className="px-4 sm:px-5 py-3.5 text-right">
+                              <button onClick={() => { if (confirm(`Delete "${label}"?`)) deleteMutation.mutate(t.id); }}
+                                className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all ml-auto"
+                                aria-label={`Delete ${label} template`}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 

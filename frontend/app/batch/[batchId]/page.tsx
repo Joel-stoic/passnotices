@@ -156,12 +156,12 @@ function ClientModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
+        <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-border shrink-0">
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold text-foreground truncate">{client.name}</h2>
             <p className="text-xs text-muted-foreground">Client details & actions</p>
@@ -175,11 +175,11 @@ function ClientModal({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-6 flex flex-col lg:flex-row gap-6">
+        <div className="overflow-y-auto flex-1 p-4 sm:p-5 flex flex-col lg:flex-row gap-5 lg:gap-6">
           {/* Left Column: Details */}
-          <div className="flex-1 space-y-6 min-w-0">
+          <div className="flex-1 space-y-5 sm:space-y-6 min-w-0">
             {/* Contact info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
               {client.email && (
                 <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border">
                   <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
@@ -601,16 +601,17 @@ export default function BatchPage() {
         {/* ============================================================== */}
         {/* TOP HEADER */}
         {/* ============================================================== */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-border pb-4 sm:pb-6">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => router.push("/dashboard")}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0"
+              aria-label="Back to dashboard"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="font-semibold text-lg text-foreground">
+            <div className="min-w-0">
+              <h1 className="font-semibold text-base sm:text-lg text-foreground truncate">
                 {batch.name}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -625,7 +626,7 @@ export default function BatchPage() {
         {/* ============================================================== */}
         {/* GMAIL STATUS & BULK SEND */}
         {/* ============================================================== */}
-        <section className="bg-muted/30 border border-border rounded-xl p-5 md:p-6 space-y-6">
+        <section className="bg-muted/30 border border-border rounded-xl p-4 sm:p-6 space-y-5 sm:space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Bulk Send Notices</h2>
@@ -634,10 +635,10 @@ export default function BatchPage() {
               </p>
             </div>
             {gmailConnected ? (
-              <div className="flex items-center gap-3 px-3 py-1.5 bg-background border border-border rounded-lg shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 bg-background border border-border rounded-lg shadow-sm max-w-full">
                 <div className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                <span className="text-xs font-medium text-foreground">{gmailAddress}</span>
-                <button onClick={handleDisconnectGmail} className="text-xs font-medium text-muted-foreground hover:text-destructive underline-offset-2 transition-colors border-l border-border pl-3 ml-1">
+                <span className="text-xs font-medium text-foreground truncate max-w-[150px] sm:max-w-none">{gmailAddress}</span>
+                <button onClick={handleDisconnectGmail} className="text-xs font-medium text-muted-foreground hover:text-destructive underline-offset-2 transition-colors border-l border-border pl-2 sm:pl-3 ml-1 shrink-0">
                   Disconnect
                 </button>
               </div>
@@ -645,14 +646,14 @@ export default function BatchPage() {
               <button 
                 onClick={handleConnectGmail} 
                 disabled={gmailConnecting}
-                className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 {gmailConnecting ? "Connecting..." : "Connect Gmail to send"}
               </button>
             )}
           </div>
 
-          <div className="flex flex-col md:flex-row items-end gap-4 border-t border-border pt-6">
+          <div className="flex flex-col md:flex-row items-stretch md:items-end gap-3 sm:gap-4 border-t border-border pt-5 sm:pt-6">
             <div className="w-full md:w-[320px]">
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Notice Type</label>
               <div className="relative">
@@ -780,14 +781,15 @@ export default function BatchPage() {
                           )}
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                             <button
                               onClick={(e) => handleDeleteClient(client.id, e)}
-                              className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
+                              className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+                              aria-label="Delete client"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" />
                           </div>
                         </td>
                       </tr>
@@ -810,7 +812,7 @@ export default function BatchPage() {
 
             {/* Pagination */}
             {filteredClients.length > 0 && (
-              <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/20">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 px-4 sm:px-5 py-3 border-t border-border bg-muted/20 text-center sm:text-left">
                 <p className="text-xs text-muted-foreground">
                   Showing {(page - 1) * PAGE_SIZE + 1} to {Math.min(page * PAGE_SIZE, filteredClients.length)} of {filteredClients.length}
                 </p>
@@ -819,6 +821,7 @@ export default function BatchPage() {
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
                     className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors rounded hover:bg-muted"
+                    aria-label="Previous page"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -826,6 +829,7 @@ export default function BatchPage() {
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
                     className="p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50 transition-colors rounded hover:bg-muted"
+                    aria-label="Next page"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>

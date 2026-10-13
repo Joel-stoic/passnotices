@@ -55,10 +55,10 @@ export function SignupForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <h2 className="font-serif text-[28px] text-foreground mb-2">
+      <h2 className="font-serif text-2xl sm:text-[28px] text-foreground mb-2">
         Create your account
       </h2>
-      <p className="text-secondary text-sm mb-8 leading-[1.7]">
+      <p className="text-secondary text-sm mb-6 sm:mb-8 leading-[1.7]">
         Start your 14-day free trial. No credit card required.
       </p>
 
@@ -170,9 +170,9 @@ export function SignupForm() {
 
         <p className="text-[11px] text-secondary text-center leading-relaxed">
           By signing up you agree to our{" "}
-          <Link href="#" className="underline underline-offset-2 hover:text-foreground transition-colors duration-150">Terms</Link>{" "}
+          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-colors duration-150">Terms</Link>{" "}
           and{" "}
-          <Link href="#" className="underline underline-offset-2 hover:text-foreground transition-colors duration-150">Privacy Policy</Link>.
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-colors duration-150">Privacy Policy</Link>.
         </p>
       </form>
 

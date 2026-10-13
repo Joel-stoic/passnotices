@@ -175,10 +175,10 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <DashboardLayout activeNav="dashboard">
-        <div className="grid grid-cols-3 gap-3 mb-7">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
           {[1,2,3].map(i => <div key={i} className="h-[88px] rounded-xl bg-[#141418] animate-pulse" />)}
         </div>
-        <div className="grid grid-cols-[1fr_360px] gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
           <div className="h-[300px] rounded-xl bg-[#141418] animate-pulse" />
           <div className="h-[220px] rounded-xl bg-[#141418] animate-pulse" />
         </div>
@@ -188,31 +188,31 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout activeNav="dashboard">
-      <div className="mb-7">
-        <h1 className="text-[22px] font-serif font-semibold text-foreground tracking-tight">Dashboard</h1>
+      <div className="mb-6 sm:mb-7">
+        <h1 className="text-xl sm:text-[22px] font-serif font-semibold text-foreground tracking-tight">Dashboard</h1>
         <p className="text-xs text-muted-foreground mt-1">Manage your client batches and notice delivery.</p>
       </div>
 
       {batches.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-7">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 sm:mb-7">
           {[
             { icon: <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />, label: "Batches", value: batches.length, sub: "Total imports" },
             { icon: <Users className="w-3.5 h-3.5 text-muted-foreground" />, label: "Total clients", value: totalClients, sub: "Across all batches" },
             { icon: <Clock className="w-3.5 h-3.5 text-muted-foreground" />, label: "Last import", value: formatRelative(batches[0].createdAt), sub: formatDate(batches[0].createdAt), small: true },
           ].map((s, i) => (
-            <div key={i} className="bg-[#141418] border border-[#222228] rounded-xl px-5 py-4">
-              <div className="flex items-center gap-1.5 mb-2.5">{s.icon}<span className="text-[11px] text-muted-foreground font-medium">{s.label}</span></div>
-              <p className={`font-semibold text-foreground leading-none tracking-tight ${s.small ? "text-[18px] mt-1" : "text-[26px]"}`}>{s.value}</p>
-              <p className="text-[11px] text-muted-foreground mt-1.5">{s.sub}</p>
+            <div key={i} className="bg-[#141418] border border-[#222228] rounded-xl px-4 sm:px-5 py-3.5 sm:py-4">
+              <div className="flex items-center gap-1.5 mb-2 sm:mb-2.5">{s.icon}<span className="text-[11px] text-muted-foreground font-medium">{s.label}</span></div>
+              <p className={`font-semibold text-foreground leading-none tracking-tight ${s.small ? "text-[16px] sm:text-[18px] mt-1" : "text-[22px] sm:text-[26px]"}`}>{s.value}</p>
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5">{s.sub}</p>
             </div>
           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-[1fr_360px] gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_360px] gap-5 items-start">
         {/* Batch list */}
         <div className="bg-[#141418] border border-[#222228] rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#1a1a20]">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-[#1a1a20]">
             <span className="text-[13px] font-semibold text-foreground">Recent uploads</span>
             <span className="text-[11px] text-muted-foreground bg-[#222228] px-2.5 py-0.5 rounded-full">
               {batches.length} {batches.length === 1 ? "batch" : "batches"}
@@ -232,54 +232,57 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">Import a spreadsheet to get started.</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-white/[0.02] border-b border-[#1a1a20]">
-                  <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Batch</th>
-                  <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Clients</th>
-                  <th className="px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uploaded</th>
-                  <th className="px-5 py-2.5" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#1a1a20]">
-                {batches.map((batch: Batch) => (
-                  <tr key={batch.id} onClick={() => router.push(`/batch/${batch.id}`)}
-                    className="hover:bg-blue-500/[0.04] transition-colors group cursor-pointer">
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                          <FileSpreadsheet className="w-3.5 h-3.5 text-blue-400" />
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-medium text-foreground truncate max-w-[260px]">{batch.name}</p>
-                          <p className="text-[11px] text-muted-foreground">{formatRelative(batch.createdAt)}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">
-                        {batch._count.clients}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <p className="text-[12px] text-muted-foreground">{formatDate(batch.createdAt)}</p>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(batch); }}
-                          className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); router.push(`/batch/${batch.id}`); }}
-                          className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors">
-                          Open <ChevronRight className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[500px]">
+                <thead>
+                  <tr className="bg-white/[0.02] border-b border-[#1a1a20]">
+                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Batch</th>
+                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Clients</th>
+                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uploaded</th>
+                    <th className="px-4 sm:px-5 py-2.5" />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#1a1a20]">
+                  {batches.map((batch: Batch) => (
+                    <tr key={batch.id} onClick={() => router.push(`/batch/${batch.id}`)}
+                      className="hover:bg-blue-500/[0.04] transition-colors group cursor-pointer">
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-blue-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-medium text-foreground truncate max-w-[150px] sm:max-w-[260px]">{batch.name}</p>
+                            <p className="text-[11px] text-muted-foreground">{formatRelative(batch.createdAt)}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">
+                          {batch._count.clients}
+                        </span>
+                      </td>
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <p className="text-[12px] text-muted-foreground">{formatDate(batch.createdAt)}</p>
+                      </td>
+                      <td className="px-4 sm:px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(batch); }}
+                            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            aria-label="Delete batch">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); router.push(`/batch/${batch.id}`); }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors">
+                            Open <ChevronRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 

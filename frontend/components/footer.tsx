@@ -46,7 +46,7 @@ export function Footer() {
           {/* Contact */}
           <div className="flex flex-col space-y-3">
             <p className="text-xs font-bold uppercase tracking-widest text-secondary mb-1">Contact</p>
-            <a href="mailto:joelimmanual.off@gmail.com" className="text-sm text-secondary hover:text-foreground transition-colors duration-150">
+            <a href="mailto:joelimmanual.off@gmail.com" className="text-sm text-secondary hover:text-foreground transition-colors duration-150 break-all">
               joelimmanual.off@gmail.com
             </a>
             <a href="https://wa.me/918270641480" className="text-sm text-secondary hover:text-foreground transition-colors duration-150">
@@ -57,7 +57,7 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-border pt-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="border-t border-border pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left">
           <p className="text-xs text-secondary">
             © 2026 PassNotice. All rights reserved.
           </p>

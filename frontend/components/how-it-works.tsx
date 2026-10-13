@@ -35,17 +35,17 @@ export function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="w-full bg-background py-24 border-t border-border">
+    <section id="how-it-works" className="w-full bg-background py-16 md:py-24 border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-serif text-3xl md:text-4xl text-foreground text-left mb-16">
+        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-foreground text-left mb-10 md:mb-16">
           Three Steps to Send 500 Notices
         </h2>
 
-        <div className="flex flex-col md:flex-row items-stretch justify-between gap-0 relative">
+        <div className="flex flex-col md:flex-row items-stretch justify-between gap-4 md:gap-0 relative">
           {steps.map((step, index) => (
-            <div key={step.number} className="flex flex-1 items-stretch relative">
+            <div key={step.number} className="flex flex-col md:flex-row flex-1 items-stretch relative">
               {/* Step Card */}
-              <div className="flex-1 bg-background border border-border border-t-2 border-t-accent p-8 relative overflow-hidden">
+              <div className="flex-1 bg-background border border-border border-t-2 border-t-accent p-6 sm:p-8 relative overflow-hidden rounded-sm">
                 {/* Watermark number */}
                 <span
                   className="absolute bottom-4 right-4 font-serif font-bold text-foreground select-none pointer-events-none"
@@ -57,7 +57,7 @@ export function HowItWorks() {
 
                 <div className="relative z-10 flex flex-col h-full">
                   {/* Icon */}
-                  <div className="mb-6">{step.icon}</div>
+                  <div className="mb-5 sm:mb-6">{step.icon}</div>
 
                   <h3 className="font-semibold text-foreground text-[16px] mb-2">
                     {step.title}

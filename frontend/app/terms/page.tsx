@@ -5,11 +5,11 @@ export default function TermsOfService() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-background">
       <Navbar />
-      <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
-        <div className="space-y-8 text-secondary leading-relaxed">
+      <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 w-full">
+        <div className="space-y-6 sm:space-y-8 text-secondary leading-relaxed">
           <div>
-            <h1 className="font-serif text-3xl md:text-4xl text-foreground mb-4">Terms of Service</h1>
-            <p className="text-sm">Last Updated: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl text-foreground mb-3 sm:mb-4">Terms of Service</h1>
+            <p className="text-xs sm:text-sm">Last Updated: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
           </div>
 
           <section className="space-y-4">
@@ -66,7 +66,7 @@ export default function TermsOfService() {
           <section className="space-y-4">
             <h2 className="font-serif text-xl text-foreground">8. Contact Information</h2>
             <p>
-              If you have any questions about these Terms, please contact us at: <a href="mailto:hello@passnotice.com" className="text-accent hover:underline">hello@passnotice.com</a>.
+              If you have any questions about these Terms, please contact us at: <a href="mailto:hello@passnotice.com" className="text-accent hover:underline break-all">hello@passnotice.com</a>.
             </p>
           </section>
         </div>
