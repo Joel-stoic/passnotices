@@ -50,22 +50,22 @@ function DeleteConfirmDialog({ name, onConfirm, onCancel, loading }: {
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative z-10 bg-[#141418] border border-[#222228] rounded-xl shadow-2xl w-full max-w-sm p-6">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative z-10 bg-card border border-border rounded-xl shadow-2xl w-full max-w-sm p-6">
         <div className="flex items-start gap-3 mb-5">
           <div className="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <AlertTriangle className="w-4 h-4 text-red-500 dark:text-red-400" />
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground mb-1">Delete batch?</p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-secondary leading-relaxed">
               <span className="text-foreground font-medium">&ldquo;{name}&rdquo;</span> and all its clients and notices will be permanently deleted.
             </p>
           </div>
         </div>
         <div className="flex gap-2 justify-end">
           <button onClick={onCancel} disabled={loading}
-            className="px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground bg-muted/40 hover:bg-muted rounded-lg transition-colors disabled:opacity-50">
+            className="px-4 py-2 text-xs font-medium text-secondary hover:text-foreground bg-muted/60 hover:bg-muted rounded-lg transition-colors disabled:opacity-50 border border-border/50">
             Cancel
           </button>
           <button onClick={onConfirm} disabled={loading}
@@ -176,11 +176,11 @@ export default function DashboardPage() {
     return (
       <DashboardLayout activeNav="dashboard">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
-          {[1,2,3].map(i => <div key={i} className="h-[88px] rounded-xl bg-[#141418] animate-pulse" />)}
+          {[1,2,3].map(i => <div key={i} className="h-[88px] rounded-xl bg-card border border-border animate-pulse shadow-sm" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
-          <div className="h-[300px] rounded-xl bg-[#141418] animate-pulse" />
-          <div className="h-[220px] rounded-xl bg-[#141418] animate-pulse" />
+          <div className="h-[300px] rounded-xl bg-card border border-border animate-pulse shadow-sm" />
+          <div className="h-[220px] rounded-xl bg-card border border-border animate-pulse shadow-sm" />
         </div>
       </DashboardLayout>
     );
@@ -190,20 +190,20 @@ export default function DashboardPage() {
     <DashboardLayout activeNav="dashboard">
       <div className="mb-6 sm:mb-7">
         <h1 className="text-xl sm:text-[22px] font-serif font-semibold text-foreground tracking-tight">Dashboard</h1>
-        <p className="text-xs text-muted-foreground mt-1">Manage your client batches and notice delivery.</p>
+        <p className="text-xs text-secondary mt-1">Manage your client batches and notice delivery.</p>
       </div>
 
       {batches.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 sm:mb-7">
           {[
-            { icon: <FolderOpen className="w-3.5 h-3.5 text-muted-foreground" />, label: "Batches", value: batches.length, sub: "Total imports" },
-            { icon: <Users className="w-3.5 h-3.5 text-muted-foreground" />, label: "Total clients", value: totalClients, sub: "Across all batches" },
-            { icon: <Clock className="w-3.5 h-3.5 text-muted-foreground" />, label: "Last import", value: formatRelative(batches[0].createdAt), sub: formatDate(batches[0].createdAt), small: true },
+            { icon: <FolderOpen className="w-3.5 h-3.5 text-secondary" />, label: "Batches", value: batches.length, sub: "Total imports" },
+            { icon: <Users className="w-3.5 h-3.5 text-secondary" />, label: "Total clients", value: totalClients, sub: "Across all batches" },
+            { icon: <Clock className="w-3.5 h-3.5 text-secondary" />, label: "Last import", value: formatRelative(batches[0].createdAt), sub: formatDate(batches[0].createdAt), small: true },
           ].map((s, i) => (
-            <div key={i} className="bg-[#141418] border border-[#222228] rounded-xl px-4 sm:px-5 py-3.5 sm:py-4">
-              <div className="flex items-center gap-1.5 mb-2 sm:mb-2.5">{s.icon}<span className="text-[11px] text-muted-foreground font-medium">{s.label}</span></div>
+            <div key={i} className="bg-card border border-border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 shadow-sm">
+              <div className="flex items-center gap-1.5 mb-2 sm:mb-2.5">{s.icon}<span className="text-[11px] text-secondary font-medium">{s.label}</span></div>
               <p className={`font-semibold text-foreground leading-none tracking-tight ${s.small ? "text-[16px] sm:text-[18px] mt-1" : "text-[22px] sm:text-[26px]"}`}>{s.value}</p>
-              <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5">{s.sub}</p>
+              <p className="text-[10px] sm:text-[11px] text-secondary mt-1.5">{s.sub}</p>
             </div>
           ))}
         </div>
@@ -211,69 +211,69 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_360px] gap-5 items-start">
         {/* Batch list */}
-        <div className="bg-[#141418] border border-[#222228] rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-[#1a1a20]">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-border bg-surface/50 dark:bg-card">
             <span className="text-[13px] font-semibold text-foreground">Recent uploads</span>
-            <span className="text-[11px] text-muted-foreground bg-[#222228] px-2.5 py-0.5 rounded-full">
+            <span className="text-[11px] text-secondary bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
               {batches.length} {batches.length === 1 ? "batch" : "batches"}
             </span>
           </div>
 
           {isError ? (
             <div className="flex flex-col items-center gap-3 py-12">
-              <AlertCircle className="w-5 h-5 text-red-400" />
-              <p className="text-sm text-red-400">Failed to load batches</p>
-              <button onClick={() => refetch()} className="text-xs font-medium text-blue-400 hover:underline">Retry</button>
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <p className="text-sm text-red-500">Failed to load batches</p>
+              <button onClick={() => refetch()} className="text-xs font-medium text-accent dark:text-blue-400 hover:underline">Retry</button>
             </div>
           ) : batches.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-16 text-center px-6">
-              <FolderOpen className="w-8 h-8 text-muted-foreground/20 mb-1" />
+              <FolderOpen className="w-8 h-8 text-secondary/40 mb-1" />
               <p className="text-sm font-semibold text-foreground">No batches yet</p>
-              <p className="text-xs text-muted-foreground">Import a spreadsheet to get started.</p>
+              <p className="text-xs text-secondary">Import a spreadsheet to get started.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[500px]">
                 <thead>
-                  <tr className="bg-white/[0.02] border-b border-[#1a1a20]">
-                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Batch</th>
-                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Clients</th>
-                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uploaded</th>
+                  <tr className="bg-surface/50 dark:bg-white/[0.02] border-b border-border">
+                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Batch</th>
+                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Clients</th>
+                    <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Uploaded</th>
                     <th className="px-4 sm:px-5 py-2.5" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1a1a20]">
+                <tbody className="divide-y divide-border">
                   {batches.map((batch: Batch) => (
                     <tr key={batch.id} onClick={() => router.push(`/batch/${batch.id}`)}
-                      className="hover:bg-blue-500/[0.04] transition-colors group cursor-pointer">
+                      className="hover:bg-muted/50 transition-colors group cursor-pointer">
                       <td className="px-4 sm:px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                            <FileSpreadsheet className="w-3.5 h-3.5 text-blue-400" />
+                          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-accent" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-[13px] font-medium text-foreground truncate max-w-[150px] sm:max-w-[260px]">{batch.name}</p>
-                            <p className="text-[11px] text-muted-foreground">{formatRelative(batch.createdAt)}</p>
+                            <p className="text-[11px] text-secondary">{formatRelative(batch.createdAt)}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 sm:px-5 py-3.5">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-accent/10 text-accent">
                           {batch._count.clients}
                         </span>
                       </td>
                       <td className="px-4 sm:px-5 py-3.5">
-                        <p className="text-[12px] text-muted-foreground">{formatDate(batch.createdAt)}</p>
+                        <p className="text-[12px] text-secondary">{formatDate(batch.createdAt)}</p>
                       </td>
                       <td className="px-4 sm:px-5 py-3.5">
                         <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(batch); }}
-                            className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                            className="w-7 h-7 rounded-md flex items-center justify-center text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
                             aria-label="Delete batch">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                           <button onClick={(e) => { e.stopPropagation(); router.push(`/batch/${batch.id}`); }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors">
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-accent bg-accent/10 hover:bg-accent/20 rounded-lg transition-colors">
                             Open <ChevronRight className="w-3 h-3" />
                           </button>
                         </div>
@@ -291,51 +291,51 @@ export default function DashboardPage() {
           <div ref={dropZoneRef}
             onClick={() => !file && fileInputRef.current?.click()}
             className={[
-              "rounded-xl border-[1.5px] border-dashed transition-all duration-200 bg-[#141418]",
-              isDragging ? "border-blue-400 bg-blue-500/5" : file ? "border-[#222228] cursor-default" : "border-[#222228] hover:border-blue-400/50 cursor-pointer",
+              "rounded-xl border-[1.5px] border-dashed transition-all duration-200 bg-card shadow-sm",
+              isDragging ? "border-accent bg-accent/5" : file ? "border-border cursor-default" : "border-border hover:border-accent/50 cursor-pointer",
             ].join(" ")}>
             <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) selectFile(f); }} className="hidden" />
             {!file ? (
               <div className="flex flex-col items-center py-8 px-5 text-center">
-                <div className="w-11 h-11 rounded-xl bg-[#1a1a20] border border-[#222228] flex items-center justify-center mb-4">
-                  <FileText className="w-5 h-5 text-muted-foreground" />
+                <div className="w-11 h-11 rounded-xl bg-surface border border-border flex items-center justify-center mb-4 text-secondary">
+                  <FileText className="w-5 h-5 text-secondary" />
                 </div>
                 <p className="text-[13px] font-semibold text-foreground mb-1.5">{isDragging ? "Drop to import" : "Import a spreadsheet"}</p>
-                <p className="text-[11px] text-muted-foreground mb-4">
-                  Drop an .xlsx file here, or <span className="text-blue-400 underline underline-offset-2">browse</span> · max 10 MB
+                <p className="text-[11px] text-secondary mb-4">
+                  Drop an .xlsx file here, or <span className="text-accent underline underline-offset-2 font-medium">browse</span> · max 10 MB
                 </p>
                 <div className="flex flex-wrap justify-center gap-1.5 mb-1.5">
                   {REQUIRED_COLUMNS.map((col) => (
-                    <span key={col} className="px-2 py-0.5 rounded-md bg-[#1a1a20] border border-[#222228] text-[10px] font-mono text-muted-foreground">{col}</span>
+                    <span key={col} className="px-2 py-0.5 rounded-md bg-surface border border-border text-[10px] font-mono text-secondary">{col}</span>
                   ))}
                 </div>
-                <p className="text-[10px] text-muted-foreground/40">Required columns</p>
+                <p className="text-[10px] text-secondary/60">Required columns</p>
               </div>
             ) : (
               <div className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <FileSpreadsheet className="w-4 h-4 text-blue-400" />
+                  <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="w-4 h-4 text-accent" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold text-foreground truncate">{file.name}</p>
-                    <p className="text-[11px] text-muted-foreground mb-3">{(file.size / 1024).toFixed(0)} KB</p>
+                    <p className="text-[11px] text-secondary mb-3">{(file.size / 1024).toFixed(0)} KB</p>
                     <input type="text" value={batchName} onChange={(e) => setBatchName(e.target.value)}
                       placeholder="Batch name…"
-                      className="w-full text-[12px] px-3 py-2 rounded-lg border border-[#222228] bg-[#0c0c0f] text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-blue-400/40 focus:border-blue-400/40 transition-all" />
+                      className="w-full text-[12px] px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent transition-all" />
                     {validationError && (
-                      <div className="flex items-start gap-1.5 mt-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/20 text-red-400">
+                      <div className="flex items-start gap-1.5 mt-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/20 text-red-500 dark:text-red-400">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <p className="text-[11px]">{validationError}</p>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1a1a20]">
-                  <button onClick={(e) => { e.stopPropagation(); clearFile(); }} className="text-[11px] text-muted-foreground hover:text-foreground transition-colors">Remove</button>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                  <button onClick={(e) => { e.stopPropagation(); clearFile(); }} className="text-[11px] text-secondary hover:text-foreground transition-colors">Remove</button>
                   <button onClick={(e) => { e.stopPropagation(); uploadMutation.mutate(); }}
                     disabled={uploadMutation.isPending}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-500 hover:bg-blue-600 text-white text-[12px] font-semibold rounded-lg disabled:opacity-60 transition-colors">
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-accent hover:bg-accent/90 text-white text-[12px] font-semibold rounded-lg disabled:opacity-60 transition-colors">
                     {uploadMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Importing…</> : <><Upload className="w-3.5 h-3.5" /> Import</>}
                   </button>
                 </div>
@@ -343,13 +343,13 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-[#141418] border border-[#222228] rounded-xl p-4">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
             <p className="text-[12px] font-semibold text-foreground mb-3">How it works</p>
             <div className="flex flex-col gap-3">
               {[["Import", "your client list from Excel"], ["Generate", "notices from your templates"], ["Send", "via Gmail or WhatsApp with one click"]].map(([bold, rest], i) => (
                 <div key={i} className="flex items-start gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-blue-500/25 text-[10px] font-bold text-blue-400 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</div>
-                  <p className="text-[12px] text-muted-foreground"><span className="text-foreground font-medium">{bold}</span> {rest}</p>
+                  <div className="w-5 h-5 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-bold text-accent flex items-center justify-center shrink-0 mt-0.5">{i + 1}</div>
+                  <p className="text-[12px] text-secondary"><span className="text-foreground font-medium">{bold}</span> {rest}</p>
                 </div>
               ))}
             </div>

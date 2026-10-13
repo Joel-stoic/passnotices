@@ -106,7 +106,7 @@ export default function SettingsPage() {
     return (
       <DashboardLayout activeNav="settings">
         <div className="space-y-4 max-w-2xl">
-          {[1,2,3].map(i => <div key={i} className="h-24 rounded-xl bg-[#141418] animate-pulse" />)}
+          {[1,2,3].map(i => <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse shadow-sm" />)}
         </div>
       </DashboardLayout>
     );
@@ -117,52 +117,52 @@ export default function SettingsPage() {
       <div className="max-w-2xl space-y-6 sm:space-y-8">
         <div>
           <h1 className="text-xl sm:text-[22px] font-serif font-semibold text-foreground tracking-tight">Settings</h1>
-          <p className="text-xs text-muted-foreground mt-1">Manage your Gmail connection and notice templates.</p>
+          <p className="text-xs text-secondary mt-1">Manage your Gmail connection and notice templates.</p>
         </div>
 
         {/* Gmail */}
         <section>
           <h2 className="text-[13px] font-semibold text-foreground mb-3">Gmail connection</h2>
-          <div className="bg-[#141418] border border-[#222228] rounded-xl overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
             <div className="p-4 sm:p-5">
               {gmailConnected ? (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                      <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-medium text-foreground">Connected</p>
-                      <p className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-xs">{gmailAddress}</p>
+                      <p className="text-xs text-secondary truncate max-w-[200px] sm:max-w-xs">{gmailAddress}</p>
                     </div>
                   </div>
                   <button onClick={() => { if (confirm("Disconnect Gmail?")) disconnectGmailMutation.mutate(); }}
                     disabled={disconnectGmailMutation.isPending}
-                    className="text-xs text-muted-foreground hover:text-red-400 transition-colors disabled:opacity-50 self-start sm:self-auto py-1">
+                    className="text-xs text-secondary hover:text-red-500 transition-colors disabled:opacity-50 self-start sm:self-auto py-1">
                     {disconnectGmailMutation.isPending ? "Disconnecting…" : "Disconnect"}
                   </button>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#1a1a20] flex items-center justify-center shrink-0">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
+                    <div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center shrink-0">
+                      <Mail className="w-4 h-4 text-secondary" />
                     </div>
                     <div>
                       <p className="text-[13px] font-medium text-foreground">No account connected</p>
-                      <p className="text-xs text-muted-foreground">Connect Gmail to send notices from your address.</p>
+                      <p className="text-xs text-secondary">Connect Gmail to send notices from your address.</p>
                     </div>
                   </div>
                   <button onClick={() => connectGmailMutation.mutate()} disabled={connectGmailMutation.isPending}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg disabled:opacity-60 transition-colors shrink-0 w-full sm:w-auto">
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-lg disabled:opacity-60 transition-colors shrink-0 w-full sm:w-auto">
                     {connectGmailMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Connecting…</> : "Connect Gmail"}
                   </button>
                 </div>
               )}
             </div>
-            <div className="flex items-start gap-2.5 px-4 sm:px-5 py-3 bg-[#0c0c0f] border-t border-[#1a1a20]">
-              <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <div className="flex items-start gap-2.5 px-4 sm:px-5 py-3 bg-surface/50 border-t border-border">
+              <ShieldCheck className="w-3.5 h-3.5 text-secondary shrink-0 mt-0.5" />
+              <p className="text-[11px] text-secondary leading-relaxed">
                 Google will show a security warning — click <strong className="text-foreground">Advanced</strong> → <strong className="text-foreground">Go to PassNotice</strong> to continue.
               </p>
             </div>
@@ -175,26 +175,26 @@ export default function SettingsPage() {
           <div className="space-y-3">
 
             {/* Upload */}
-            <div className="bg-[#141418] border border-[#222228] rounded-xl p-4 sm:p-5">
+            <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm">
               <p className="text-xs font-medium text-foreground mb-3">Upload a template</p>
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <select value={noticeType} onChange={(e) => setNoticeType(e.target.value)}
-                  className="w-full sm:flex-1 px-3 py-2.5 text-xs bg-[#0c0c0f] text-foreground border border-[#222228] rounded-lg focus:outline-none focus:border-blue-400/50 transition-all">
+                  className="w-full sm:flex-1 px-3 py-2.5 text-xs bg-background text-foreground border border-border rounded-lg focus:outline-none focus:border-accent transition-all">
                   <option value="" disabled>Select notice type…</option>
                   {NOTICE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
                 <button onClick={() => fileInputRef.current?.click()}
-                  className={`w-full sm:flex-1 px-3 py-2.5 text-xs border rounded-lg text-left truncate transition-all ${file ? "border-blue-500/30 text-foreground bg-blue-500/5" : "border-[#222228] text-muted-foreground hover:border-blue-400/30"}`}>
+                  className={`w-full sm:flex-1 px-3 py-2.5 text-xs border rounded-lg text-left truncate transition-all ${file ? "border-accent/40 text-foreground bg-accent/5" : "border-border text-secondary hover:border-accent/40"}`}>
                   <input ref={fileInputRef} type="file" accept=".docx" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setUploadError(""); }} className="hidden" />
                   {file ? file.name : "Choose .docx file"}
                 </button>
                 <button onClick={() => uploadMutation.mutate()} disabled={!file || !noticeType || uploadMutation.isPending}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0">
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0">
                   {uploadMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><UploadCloud className="w-3.5 h-3.5" /> Upload</>}
                 </button>
               </div>
               {uploadError && (
-                <div className="mt-3 flex items-center gap-2 text-xs text-red-400 bg-red-500/5 border border-red-500/20 px-3 py-2 rounded-lg">
+                <div className="mt-3 flex items-center gap-2 text-xs text-red-500 bg-red-500/5 border border-red-500/20 px-3 py-2 rounded-lg">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />{uploadError}
                 </div>
               )}
@@ -202,37 +202,37 @@ export default function SettingsPage() {
 
             {/* List */}
             {(templates as Template[]).length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-12 border border-dashed border-[#222228] rounded-xl text-center">
-                <FileText className="w-7 h-7 text-muted-foreground/20" />
+              <div className="flex flex-col items-center gap-2 py-12 border border-dashed border-border rounded-xl text-center bg-card">
+                <FileText className="w-7 h-7 text-secondary/30" />
                 <p className="text-sm font-semibold text-foreground">No templates yet</p>
-                <p className="text-xs text-muted-foreground">Upload a .docx template for each notice type.</p>
+                <p className="text-xs text-secondary">Upload a .docx template for each notice type.</p>
               </div>
             ) : (
-              <div className="bg-[#141418] border border-[#222228] rounded-xl overflow-hidden">
+              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[400px]">
                     <thead>
-                      <tr className="bg-white/[0.02] border-b border-[#1a1a20]">
-                        <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Notice type</th>
-                        <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Uploaded</th>
+                      <tr className="bg-surface/50 dark:bg-white/[0.02] border-b border-border">
+                        <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Notice type</th>
+                        <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Uploaded</th>
                         <th className="px-4 sm:px-5 py-2.5 w-12" />
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#1a1a20]">
+                    <tbody className="divide-y divide-border">
                       {(templates as Template[]).map((t) => {
                         const label = NOTICE_TYPES.find((n) => n.value === t.noticeType)?.label ?? t.noticeType;
                         return (
-                          <tr key={t.id} className="hover:bg-blue-500/[0.04] transition-colors group">
+                          <tr key={t.id} className="hover:bg-muted/50 transition-colors group">
                             <td className="px-4 sm:px-5 py-3.5">
                               <div className="flex items-center gap-2.5">
-                                <FileText className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                                <FileText className="w-3.5 h-3.5 text-accent shrink-0" />
                                 <span className="text-[13px] font-medium text-foreground">{label}</span>
                               </div>
                             </td>
-                            <td className="px-4 sm:px-5 py-3.5 text-xs text-muted-foreground">{formatDate(t.createdAt)}</td>
+                            <td className="px-4 sm:px-5 py-3.5 text-xs text-secondary">{formatDate(t.createdAt)}</td>
                             <td className="px-4 sm:px-5 py-3.5 text-right">
                               <button onClick={() => { if (confirm(`Delete "${label}"?`)) deleteMutation.mutate(t.id); }}
-                                className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-red-400 hover:bg-red-400/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all ml-auto"
+                                className="w-7 h-7 rounded-md flex items-center justify-center text-secondary hover:text-red-500 hover:bg-red-500/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all ml-auto"
                                 aria-label={`Delete ${label} template`}>
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -247,12 +247,12 @@ export default function SettingsPage() {
             )}
 
             {(templates as Template[]).length > 0 && (templates as Template[]).length < NOTICE_TYPES.length && (
-              <p className="text-xs text-muted-foreground px-1">
+              <p className="text-xs text-secondary px-1">
                 {NOTICE_TYPES.length - (templates as Template[]).length} of {NOTICE_TYPES.length} notice types still need a template.
               </p>
             )}
             {(templates as Template[]).length === NOTICE_TYPES.length && (
-              <div className="flex items-center gap-2 text-xs text-green-400 px-1">
+              <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400 px-1">
                 <CheckCircle2 className="w-3.5 h-3.5" /> All notice types have a template.
               </div>
             )}

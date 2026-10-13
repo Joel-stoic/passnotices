@@ -18,6 +18,14 @@ const config: Config = {
         border: "var(--border)",
         success: "var(--success)",
         error: "var(--error)",
+        destructive: "var(--error)",
+        card: "var(--card)",
+        muted: "var(--muted)",
+        "muted-foreground": "var(--muted-foreground)",
+        primary: {
+          DEFAULT: "var(--accent)",
+          foreground: "#FFFFFF",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "sans-serif"],

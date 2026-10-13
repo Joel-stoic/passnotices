@@ -6,23 +6,29 @@
   :root {
     --background: #FFFFFF;
     --surface: #F8F8F6;
+    --card: #FFFFFF;
     --foreground: #0A0A0A;
     --text-secondary: #4A4A4A;
     --accent: #1C3557;
     --border: #E2E2E2;
     --success: #2D6A4F;
     --error: #C0392B;
+    --muted: #F4F4F5;
+    --muted-foreground: #6B7280;
   }
 
   .dark {
     --background: #0A0A0A;
     --surface: #111111;
+    --card: #141418;
     --foreground: #F0F0F0;
     --text-secondary: #888888;
     --accent: #2A4A7F;
     --border: #222222;
     --success: #2D6A4F;
     --error: #C0392B;
+    --muted: #1A1A20;
+    --muted-foreground: #9CA3AF;
   }
 }
 

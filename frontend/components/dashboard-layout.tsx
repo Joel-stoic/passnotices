@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Scale, LogOut, LayoutDashboard, Settings } from "lucide-react";
+import { Scale, LogOut, LayoutDashboard, Settings, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { clearSession, getStoredUser, type AuthUser } from "@/lib/api";
 
 interface DashboardLayoutProps {
@@ -13,9 +14,12 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     const stored = getStoredUser();
     const token = localStorage.getItem("passnotice_token");
     if (!stored || !token) {
@@ -89,8 +93,17 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
           </nav>
 
           {/* Right actions */}
-          <div className="flex items-center gap-3 sm:gap-4 ml-auto">
-            <span className="text-xs sm:text-sm text-secondary truncate max-w-[150px] sm:max-w-[200px] md:max-w-none">{user.email}</span>
+          <div className="flex items-center gap-2 sm:gap-4 ml-auto">
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="text-secondary hover:text-foreground transition-colors duration-150 p-1.5 rounded-md hover:bg-muted/40"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+            )}
+            <span className="text-xs sm:text-sm text-secondary truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">{user.email}</span>
             <button
               onClick={handleLogout}
               className="flex items-center gap-1.5 text-xs sm:text-sm text-secondary hover:text-foreground transition-colors duration-150 p-1.5 sm:p-0 rounded-md hover:bg-muted/40 sm:hover:bg-transparent"
