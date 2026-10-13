@@ -187,7 +187,8 @@ export async function sendNoticeViaGmail(tenantId: string, noticeId: string) {
 
   const rawEmail = buildEmailFromBuffer({
     from: account.emailAddress,
-    to: process.env.TEST_EMAIL || notice.client.email,
+    // to: process.env.TEST_EMAIL || notice.client.email, for testing purpose
+    to: notice.client.email,
     subject,
     body,
     attachmentBuffer: fileBuffer,
