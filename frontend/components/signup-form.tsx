@@ -49,8 +49,8 @@ export function SignupForm() {
   };
 
   const inputClass = (field: string) =>
-    `w-full px-4 py-2.5 bg-background text-foreground border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent ${
-      fieldErrors[field] ? "border-error" : "border-border"
+    `w-full px-4 py-2.5 bg-card text-foreground border rounded-sm outline-none text-sm transition-all duration-150 focus:border-accent focus:ring-1 focus:ring-accent/20 shadow-2xs ${
+      fieldErrors[field] ? "border-error focus:ring-error/20" : "border-border"
     }`;
 
   return (
@@ -163,7 +163,7 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-accent text-white py-2.5 rounded-sm text-sm font-semibold hover:bg-accent/90 transition-colors duration-150 disabled:opacity-60 mt-2"
+          className="w-full bg-accent text-white py-2.5 rounded-sm text-sm font-semibold hover:bg-accent/90 transition-all duration-150 disabled:opacity-60 mt-2 shadow-xs"
         >
           {loading ? "Creating account…" : "Create Account"}
         </button>

@@ -51,10 +51,10 @@ export function Pricing() {
 
         {/* Table - wrapped in responsive horizontal scroll */}
         <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 mb-6">
-          <div className="min-w-[540px] border border-border rounded-sm overflow-hidden">
+          <div className="min-w-[540px] border border-border rounded-sm overflow-hidden shadow-xs">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#F8F8F6] dark:bg-[#111111] border-b border-border">
+                <tr className="bg-surface border-b border-border">
                   <th className="p-4 sm:p-6 font-semibold text-foreground text-sm w-2/5"></th>
 
                   {/* Starter column */}
@@ -64,8 +64,8 @@ export function Pricing() {
                   </th>
 
                   {/* Firm column — highlighted */}
-                  <th className="p-4 sm:p-6 border-l-2 border-r-2 border-t-2 border-accent w-[30%] relative">
-                    <span className="absolute -top-px left-1/2 -translate-x-1/2 bg-accent text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2.5 sm:px-3 py-0.5 rounded-b-sm whitespace-nowrap">
+                  <th className="p-4 sm:p-6 border-l-2 border-r-2 border-t-2 border-accent w-[30%] relative bg-accent/[0.02]">
+                    <span className="absolute -top-px left-1/2 -translate-x-1/2 bg-accent text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2.5 sm:px-3 py-0.5 rounded-b-sm whitespace-nowrap shadow-xs">
                       Most Popular
                     </span>
                     <div className="font-serif text-xl sm:text-2xl text-foreground mb-1 mt-2">Firm</div>
@@ -77,7 +77,7 @@ export function Pricing() {
                 {rows.map((row, i) => (
                   <tr
                     key={row.feature}
-                    className={`border-t border-border ${i % 2 === 0 ? "bg-white dark:bg-[#0A0A0A]" : "bg-[#FAFAFA] dark:bg-[#111111]"}`}
+                    className={`border-t border-border ${i % 2 === 0 ? "bg-card" : "bg-surface/50"}`}
                   >
                     <td className="p-3.5 sm:p-5 font-medium text-foreground">{row.feature}</td>
 
@@ -93,7 +93,7 @@ export function Pricing() {
                     </td>
 
                     {/* Firm cell */}
-                    <td className="p-3.5 sm:p-5 border-l-2 border-r-2 border-accent">
+                    <td className="p-3.5 sm:p-5 border-l-2 border-r-2 border-accent bg-accent/[0.01]">
                       {row.firmCheck === true && (
                         <Check className="w-4 h-4 text-success" />
                       )}
@@ -106,12 +106,12 @@ export function Pricing() {
                 ))}
 
                 {/* CTA row */}
-                <tr className="border-t border-border bg-[#F8F8F6] dark:bg-[#111111]">
+                <tr className="border-t border-border bg-surface">
                   <td className="p-3.5 sm:p-5" />
                   <td className="p-3.5 sm:p-5 border-l border-border">
                     <Link
                       href="/login"
-                      className="block w-full text-center py-2 px-3 sm:px-4 border border-accent text-accent dark:border-foreground dark:text-foreground text-xs sm:text-sm font-medium rounded-sm hover:bg-accent hover:text-white dark:hover:bg-foreground dark:hover:text-background transition-colors duration-150"
+                      className="block w-full text-center py-2 px-3 sm:px-4 border border-accent text-accent dark:border-foreground dark:text-foreground text-xs sm:text-sm font-medium rounded-sm hover:bg-accent hover:text-white dark:hover:bg-foreground dark:hover:text-background transition-colors duration-150 shadow-2xs"
                     >
                       Get Started
                     </Link>
@@ -119,7 +119,7 @@ export function Pricing() {
                   <td className="p-3.5 sm:p-5 border-l-2 border-r-2 border-b-2 border-accent">
                     <Link
                       href="/login"
-                      className="block w-full text-center py-2 px-3 sm:px-4 bg-accent text-white text-xs sm:text-sm font-medium rounded-sm hover:bg-accent/90 transition-colors duration-150"
+                      className="block w-full text-center py-2 px-3 sm:px-4 bg-accent text-white text-xs sm:text-sm font-medium rounded-sm hover:bg-accent/90 transition-colors duration-150 shadow-xs"
                     >
                       Get Started
                     </Link>
@@ -138,12 +138,12 @@ export function Pricing() {
         </div>
 
         {/* FAQ */}
-        <div className="space-y-0 border border-border rounded-sm overflow-hidden">
+        <div className="space-y-0 border border-border rounded-sm overflow-hidden shadow-xs">
           {faqs.map((faq, i) => (
             <div key={i} className={`border-border ${i > 0 ? "border-t" : ""}`}>
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 text-left bg-background dark:bg-[#0A0A0A] hover:bg-[#F8F8F6] dark:hover:bg-[#111111] transition-colors duration-150"
+                className="w-full flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 text-left bg-card hover:bg-surface/70 transition-colors duration-150"
               >
                 <span className="font-semibold text-foreground text-xs sm:text-sm pr-4">{faq.question}</span>
                 {openFaq === i ? (
@@ -153,7 +153,7 @@ export function Pricing() {
                 )}
               </button>
               {openFaq === i && (
-                <div className="px-4 sm:px-6 pb-4 sm:pb-5 bg-background dark:bg-[#0A0A0A]">
+                <div className="px-4 sm:px-6 pb-4 sm:pb-5 bg-card">
                   <p className="text-xs sm:text-sm text-secondary leading-[1.7]">{faq.answer}</p>
                 </div>
               )}

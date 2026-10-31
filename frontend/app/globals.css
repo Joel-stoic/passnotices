@@ -5,16 +5,16 @@
 @layer base {
   :root {
     --background: #FFFFFF;
-    --surface: #F8F8F6;
+    --surface: #F8FAFC;
     --card: #FFFFFF;
-    --foreground: #0A0A0A;
-    --text-secondary: #4A4A4A;
-    --accent: #1C3557;
-    --border: #E2E2E2;
-    --success: #2D6A4F;
-    --error: #C0392B;
-    --muted: #F4F4F5;
-    --muted-foreground: #6B7280;
+    --foreground: #0F172A;
+    --text-secondary: #475569;
+    --accent: #1A365D;
+    --border: #E2E8F0;
+    --success: #15803D;
+    --error: #DC2626;
+    --muted: #F1F5F9;
+    --muted-foreground: #64748B;
   }
 
   .dark {
@@ -33,6 +33,10 @@
 }
 
 @layer base {
+  * {
+    @apply border-border;
+  }
+
   html {
     overflow-x: hidden;
     scroll-behavior: smooth;
@@ -53,5 +57,15 @@
 
   p {
     line-height: 1.7;
+  }
+
+  ::selection {
+    background-color: rgba(26, 54, 93, 0.15);
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background-color: rgba(42, 74, 127, 0.35);
+    color: inherit;
   }
 }

@@ -16,21 +16,21 @@ export function HowItWorks() {
       title: "Upload Excel",
       description: "Upload any debtor list, with any column structure.",
       result: "Excel uploaded in under 10 seconds",
-      icon: <Table2 className="w-6 h-6 text-accent relative z-10" />,
+      icon: <Table2 className="w-5 h-5 text-accent" />,
     },
     {
       number: "02",
       title: "Auto-generate Notices",
       description: "Select the legal template and let us fill every detail.",
       result: "Notice generated, formatted, ready to review",
-      icon: <FileText className="w-6 h-6 text-accent relative z-10" />,
+      icon: <FileText className="w-5 h-5 text-accent" />,
     },
     {
       number: "03",
       title: "Send via Gmail + WhatsApp",
       description: "Send automatically and track delivery statuses.",
       result: "Delivered to inbox and WhatsApp simultaneously",
-      icon: <Send className="w-6 h-6 text-accent relative z-10" />,
+      icon: <Send className="w-5 h-5 text-accent" />,
     },
   ];
 
@@ -45,11 +45,11 @@ export function HowItWorks() {
           {steps.map((step, index) => (
             <div key={step.number} className="flex flex-col md:flex-row flex-1 items-stretch relative">
               {/* Step Card */}
-              <div className="flex-1 bg-background border border-border border-t-2 border-t-accent p-6 sm:p-8 relative overflow-hidden rounded-sm">
+              <div className="flex-1 bg-card border border-border border-t-2 border-t-accent p-6 sm:p-8 relative overflow-hidden rounded-sm shadow-xs hover:shadow-sm transition-all duration-150">
                 {/* Watermark number */}
                 <span
                   className="absolute bottom-4 right-4 font-serif font-bold text-foreground select-none pointer-events-none"
-                  style={{ fontSize: "72px", lineHeight: 1, opacity: 0.08 }}
+                  style={{ fontSize: "72px", lineHeight: 1, opacity: 0.05 }}
                   aria-hidden="true"
                 >
                   {step.number}
@@ -57,7 +57,9 @@ export function HowItWorks() {
 
                 <div className="relative z-10 flex flex-col h-full">
                   {/* Icon */}
-                  <div className="mb-5 sm:mb-6">{step.icon}</div>
+                  <div className="w-11 h-11 flex items-center justify-center bg-accent/10 rounded-sm mb-5 sm:mb-6">
+                    {step.icon}
+                  </div>
 
                   <h3 className="font-semibold text-foreground text-[16px] mb-2">
                     {step.title}

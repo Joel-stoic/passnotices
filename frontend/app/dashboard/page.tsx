@@ -69,7 +69,7 @@ function DeleteConfirmDialog({ name, onConfirm, onCancel, loading }: {
             Cancel
           </button>
           <button onClick={onConfirm} disabled={loading}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-70">
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-70 shadow-xs">
             {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
             Delete
           </button>
@@ -176,11 +176,11 @@ export default function DashboardPage() {
     return (
       <DashboardLayout activeNav="dashboard">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
-          {[1,2,3].map(i => <div key={i} className="h-[88px] rounded-xl bg-card border border-border animate-pulse shadow-sm" />)}
+          {[1,2,3].map(i => <div key={i} className="h-[88px] rounded-xl bg-card border border-border animate-pulse shadow-xs" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5">
-          <div className="h-[300px] rounded-xl bg-card border border-border animate-pulse shadow-sm" />
-          <div className="h-[220px] rounded-xl bg-card border border-border animate-pulse shadow-sm" />
+          <div className="h-[300px] rounded-xl bg-card border border-border animate-pulse shadow-xs" />
+          <div className="h-[220px] rounded-xl bg-card border border-border animate-pulse shadow-xs" />
         </div>
       </DashboardLayout>
     );
@@ -200,7 +200,7 @@ export default function DashboardPage() {
             { icon: <Users className="w-3.5 h-3.5 text-secondary" />, label: "Total clients", value: totalClients, sub: "Across all batches" },
             { icon: <Clock className="w-3.5 h-3.5 text-secondary" />, label: "Last import", value: formatRelative(batches[0].createdAt), sub: formatDate(batches[0].createdAt), small: true },
           ].map((s, i) => (
-            <div key={i} className="bg-card border border-border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 shadow-sm">
+            <div key={i} className="bg-card border border-border rounded-xl px-4 sm:px-5 py-3.5 sm:py-4 shadow-xs">
               <div className="flex items-center gap-1.5 mb-2 sm:mb-2.5">{s.icon}<span className="text-[11px] text-secondary font-medium">{s.label}</span></div>
               <p className={`font-semibold text-foreground leading-none tracking-tight ${s.small ? "text-[16px] sm:text-[18px] mt-1" : "text-[22px] sm:text-[26px]"}`}>{s.value}</p>
               <p className="text-[10px] sm:text-[11px] text-secondary mt-1.5">{s.sub}</p>
@@ -211,8 +211,8 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_360px] gap-5 items-start">
         {/* Batch list */}
-        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-border bg-surface/50 dark:bg-card">
+        <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-border bg-surface">
             <span className="text-[13px] font-semibold text-foreground">Recent uploads</span>
             <span className="text-[11px] text-secondary bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
               {batches.length} {batches.length === 1 ? "batch" : "batches"}
@@ -235,7 +235,7 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[500px]">
                 <thead>
-                  <tr className="bg-surface/50 dark:bg-white/[0.02] border-b border-border">
+                  <tr className="bg-surface border-b border-border">
                     <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Batch</th>
                     <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Clients</th>
                     <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Uploaded</th>
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                 <tbody className="divide-y divide-border">
                   {batches.map((batch: Batch) => (
                     <tr key={batch.id} onClick={() => router.push(`/batch/${batch.id}`)}
-                      className="hover:bg-muted/50 transition-colors group cursor-pointer">
+                      className="hover:bg-surface/70 transition-colors group cursor-pointer">
                       <td className="px-4 sm:px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
@@ -258,7 +258,7 @@ export default function DashboardPage() {
                         </div>
                       </td>
                       <td className="px-4 sm:px-5 py-3.5">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-accent/10 text-accent">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-accent/10 text-accent border border-accent/15">
                           {batch._count.clients}
                         </span>
                       </td>
@@ -291,8 +291,8 @@ export default function DashboardPage() {
           <div ref={dropZoneRef}
             onClick={() => !file && fileInputRef.current?.click()}
             className={[
-              "rounded-xl border-[1.5px] border-dashed transition-all duration-200 bg-card shadow-sm",
-              isDragging ? "border-accent bg-accent/5" : file ? "border-border cursor-default" : "border-border hover:border-accent/50 cursor-pointer",
+              "rounded-xl border-[1.5px] border-dashed transition-all duration-200 bg-card shadow-xs",
+              isDragging ? "border-accent bg-accent/5" : file ? "border-border cursor-default" : "border-border hover:border-accent/50 hover:bg-surface/30 cursor-pointer",
             ].join(" ")}>
             <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) selectFile(f); }} className="hidden" />
             {!file ? (
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] text-secondary mb-3">{(file.size / 1024).toFixed(0)} KB</p>
                     <input type="text" value={batchName} onChange={(e) => setBatchName(e.target.value)}
                       placeholder="Batch name…"
-                      className="w-full text-[12px] px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent transition-all" />
+                      className="w-full text-[12px] px-3 py-2 rounded-lg border border-border bg-card text-foreground placeholder:text-secondary/50 focus:outline-none focus:ring-1 focus:ring-accent/40 focus:border-accent transition-all shadow-2xs" />
                     {validationError && (
                       <div className="flex items-start gap-1.5 mt-2 p-2.5 rounded-lg bg-red-500/5 border border-red-500/20 text-red-500 dark:text-red-400">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                   <button onClick={(e) => { e.stopPropagation(); clearFile(); }} className="text-[11px] text-secondary hover:text-foreground transition-colors">Remove</button>
                   <button onClick={(e) => { e.stopPropagation(); uploadMutation.mutate(); }}
                     disabled={uploadMutation.isPending}
-                    className="flex items-center gap-1.5 px-3.5 py-2 bg-accent hover:bg-accent/90 text-white text-[12px] font-semibold rounded-lg disabled:opacity-60 transition-colors">
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-accent hover:bg-accent/90 text-white text-[12px] font-semibold rounded-lg disabled:opacity-60 transition-colors shadow-xs">
                     {uploadMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Importing…</> : <><Upload className="w-3.5 h-3.5" /> Import</>}
                   </button>
                 </div>
@@ -343,7 +343,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
+          <div className="bg-card border border-border rounded-xl p-4 shadow-xs">
             <p className="text-[12px] font-semibold text-foreground mb-3">How it works</p>
             <div className="flex flex-col gap-3">
               {[["Import", "your client list from Excel"], ["Generate", "notices from your templates"], ["Send", "via Gmail or WhatsApp with one click"]].map(([bold, rest], i) => (

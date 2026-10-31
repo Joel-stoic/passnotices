@@ -62,7 +62,7 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
               }`
             : `py-5 -mb-[1px] border-b-2 ${
                 isActive
-                  ? "border-accent text-foreground"
+                  ? "border-accent text-foreground font-semibold"
                   : "border-transparent text-secondary hover:text-foreground"
               }`
         }`}
@@ -74,9 +74,9 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-surface/40 dark:bg-background">
       {/* Top bar */}
-      <header className="w-full border-b border-border bg-white/95 dark:bg-[#0A0A0A]/95 backdrop-blur-sm sticky top-0 z-40">
+      <header className="w-full border-b border-border bg-card/90 backdrop-blur-md sticky top-0 z-40 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 mr-4 sm:mr-8 shrink-0">
@@ -97,7 +97,7 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
             {mounted && (
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="text-secondary hover:text-foreground transition-colors duration-150 p-1.5 rounded-md hover:bg-muted/40"
+                className="text-secondary hover:text-foreground transition-colors duration-150 p-1.5 rounded-md hover:bg-muted"
                 aria-label="Toggle theme"
               >
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -106,7 +106,7 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
             <span className="text-xs sm:text-sm text-secondary truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">{user.email}</span>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-xs sm:text-sm text-secondary hover:text-foreground transition-colors duration-150 p-1.5 sm:p-0 rounded-md hover:bg-muted/40 sm:hover:bg-transparent"
+              className="flex items-center gap-1.5 text-xs sm:text-sm text-secondary hover:text-foreground transition-colors duration-150 p-1.5 sm:p-1 rounded-md hover:bg-muted sm:hover:bg-muted"
               aria-label="Log out"
             >
               <LogOut className="w-4 h-4 shrink-0" />
@@ -116,7 +116,7 @@ export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {
         </div>
 
         {/* Mobile Navigation Tabs (visible only on screens < sm) */}
-        <div className="sm:hidden border-t border-border bg-white dark:bg-[#0A0A0A] px-4 flex items-center gap-6">
+        <div className="sm:hidden border-t border-border bg-card px-4 flex items-center gap-6">
           {navLink("/dashboard", "dashboard", <LayoutDashboard className="w-4 h-4" />, "Dashboard", true)}
           {navLink("/settings", "settings", <Settings className="w-4 h-4" />, "Settings", true)}
         </div>

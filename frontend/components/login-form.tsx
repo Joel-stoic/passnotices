@@ -60,7 +60,7 @@ export function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2.5 bg-background text-foreground border border-border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent"
+            className="w-full px-4 py-2.5 bg-card text-foreground border border-border rounded-sm outline-none text-sm transition-all duration-150 focus:border-accent focus:ring-1 focus:ring-accent/20 shadow-2xs"
             placeholder="you@lawfirm.com"
           />
         </div>
@@ -77,7 +77,7 @@ export function LoginForm() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2.5 pr-10 bg-background text-foreground border border-border rounded-sm outline-none text-sm transition-colors duration-150 focus:border-accent"
+              className="w-full px-4 py-2.5 pr-10 bg-card text-foreground border border-border rounded-sm outline-none text-sm transition-all duration-150 focus:border-accent focus:ring-1 focus:ring-accent/20 shadow-2xs"
               placeholder="••••••••"
             />
             <button
@@ -95,7 +95,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-accent text-white py-2.5 rounded-sm text-sm font-semibold hover:bg-accent/90 transition-colors duration-150 disabled:opacity-60"
+          className="w-full bg-accent text-white py-2.5 rounded-sm text-sm font-semibold hover:bg-accent/90 transition-all duration-150 disabled:opacity-60 shadow-xs"
         >
           {loading ? "Signing in…" : "Sign In"}
         </button>

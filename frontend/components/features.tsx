@@ -49,7 +49,7 @@ export function Features() {
   ];
 
   return (
-    <section id="features" className="w-full bg-[#F8F8F6] dark:bg-[#111111] py-16 md:py-24 border-t border-border">
+    <section id="features" className="w-full bg-surface py-16 md:py-24 border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header with bottom border */}
         <div className="border-b border-border pb-6 sm:pb-8 mb-8 sm:mb-12">
@@ -62,10 +62,10 @@ export function Features() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="bg-background dark:bg-[#0A0A0A] border border-border p-6 sm:p-8 rounded-sm hover:border-accent/30 dark:hover:border-accent/40 transition-colors duration-150"
+              className="bg-card border border-border p-6 sm:p-8 rounded-sm hover:border-accent/40 shadow-xs hover:shadow-sm transition-all duration-150"
             >
               {/* Icon container */}
-              <div className="w-12 h-12 flex items-center justify-center bg-[#EEF2F7] dark:bg-[#1A2535] rounded-sm mb-5">
+              <div className="w-12 h-12 flex items-center justify-center bg-accent/10 dark:bg-[#1A2535] rounded-sm mb-5">
                 {feature.icon}
               </div>
 
@@ -75,7 +75,7 @@ export function Features() {
               <p className="text-secondary text-sm leading-[1.7] mb-3">
                 {feature.description}
               </p>
-              <p className="text-xs text-secondary/60 dark:text-secondary/70">
+              <p className="text-xs text-secondary/70 dark:text-secondary/70">
                 {feature.micro}
               </p>
             </div>

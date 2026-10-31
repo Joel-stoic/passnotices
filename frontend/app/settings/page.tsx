@@ -106,7 +106,7 @@ export default function SettingsPage() {
     return (
       <DashboardLayout activeNav="settings">
         <div className="space-y-4 max-w-2xl">
-          {[1,2,3].map(i => <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse shadow-sm" />)}
+          {[1,2,3].map(i => <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse shadow-xs" />)}
         </div>
       </DashboardLayout>
     );
@@ -123,7 +123,7 @@ export default function SettingsPage() {
         {/* Gmail */}
         <section>
           <h2 className="text-[13px] font-semibold text-foreground mb-3">Gmail connection</h2>
-          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
             <div className="p-4 sm:p-5">
               {gmailConnected ? (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
@@ -154,13 +154,13 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <button onClick={() => connectGmailMutation.mutate()} disabled={connectGmailMutation.isPending}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-lg disabled:opacity-60 transition-colors shrink-0 w-full sm:w-auto">
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-lg disabled:opacity-60 transition-colors shrink-0 w-full sm:w-auto shadow-xs">
                     {connectGmailMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Connecting…</> : "Connect Gmail"}
                   </button>
                 </div>
               )}
             </div>
-            <div className="flex items-start gap-2.5 px-4 sm:px-5 py-3 bg-surface/50 border-t border-border">
+            <div className="flex items-start gap-2.5 px-4 sm:px-5 py-3 bg-surface border-t border-border">
               <ShieldCheck className="w-3.5 h-3.5 text-secondary shrink-0 mt-0.5" />
               <p className="text-[11px] text-secondary leading-relaxed">
                 Google will show a security warning — click <strong className="text-foreground">Advanced</strong> → <strong className="text-foreground">Go to PassNotice</strong> to continue.
@@ -175,21 +175,21 @@ export default function SettingsPage() {
           <div className="space-y-3">
 
             {/* Upload */}
-            <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-sm">
+            <div className="bg-card border border-border rounded-xl p-4 sm:p-5 shadow-xs">
               <p className="text-xs font-medium text-foreground mb-3">Upload a template</p>
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <select value={noticeType} onChange={(e) => setNoticeType(e.target.value)}
-                  className="w-full sm:flex-1 px-3 py-2.5 text-xs bg-background text-foreground border border-border rounded-lg focus:outline-none focus:border-accent transition-all">
+                  className="w-full sm:flex-1 px-3 py-2.5 text-xs bg-card text-foreground border border-border rounded-lg focus:outline-none focus:border-accent transition-all shadow-2xs">
                   <option value="" disabled>Select notice type…</option>
                   {NOTICE_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
                 <button onClick={() => fileInputRef.current?.click()}
-                  className={`w-full sm:flex-1 px-3 py-2.5 text-xs border rounded-lg text-left truncate transition-all ${file ? "border-accent/40 text-foreground bg-accent/5" : "border-border text-secondary hover:border-accent/40"}`}>
+                  className={`w-full sm:flex-1 px-3 py-2.5 text-xs border rounded-lg text-left truncate transition-all ${file ? "border-accent/40 text-foreground bg-accent/5" : "border-border text-secondary hover:border-accent/40 bg-card"}`}>
                   <input ref={fileInputRef} type="file" accept=".docx" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setUploadError(""); }} className="hidden" />
                   {file ? file.name : "Choose .docx file"}
                 </button>
                 <button onClick={() => uploadMutation.mutate()} disabled={!file || !noticeType || uploadMutation.isPending}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0">
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent/90 text-white text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors w-full sm:w-auto shrink-0 shadow-xs">
                   {uploadMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><UploadCloud className="w-3.5 h-3.5" /> Upload</>}
                 </button>
               </div>
@@ -208,11 +208,11 @@ export default function SettingsPage() {
                 <p className="text-xs text-secondary">Upload a .docx template for each notice type.</p>
               </div>
             ) : (
-              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+              <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[400px]">
                     <thead>
-                      <tr className="bg-surface/50 dark:bg-white/[0.02] border-b border-border">
+                      <tr className="bg-surface border-b border-border">
                         <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Notice type</th>
                         <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Uploaded</th>
                         <th className="px-4 sm:px-5 py-2.5 w-12" />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
                       {(templates as Template[]).map((t) => {
                         const label = NOTICE_TYPES.find((n) => n.value === t.noticeType)?.label ?? t.noticeType;
                         return (
-                          <tr key={t.id} className="hover:bg-muted/50 transition-colors group">
+                          <tr key={t.id} className="hover:bg-surface/70 transition-colors group">
                             <td className="px-4 sm:px-5 py-3.5">
                               <div className="flex items-center gap-2.5">
                                 <FileText className="w-3.5 h-3.5 text-accent shrink-0" />

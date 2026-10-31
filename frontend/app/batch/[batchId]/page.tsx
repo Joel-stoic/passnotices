@@ -70,8 +70,8 @@ function initials(name: string) {
 function NoticeStatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     DRAFT: "bg-muted text-muted-foreground",
-    GENERATED: "bg-blue-500/10 text-blue-500",
-    REVIEWED: "bg-green-500/10 text-green-600",
+    GENERATED: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+    REVIEWED: "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20",
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${map[status] || map.DRAFT}`}>
@@ -82,7 +82,7 @@ function NoticeStatusBadge({ status }: { status: string }) {
 
 function SendStatusIcon({ status }: { status: string }) {
   if (status === "SENT" || status === "DELIVERED")
-    return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
+    return <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />;
   if (status === "FAILED")
     return <XCircle className="w-3.5 h-3.5 text-destructive" />;
   if (status === "PENDING")
@@ -159,9 +159,9 @@ function ClientModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative z-10 bg-background border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative z-10 bg-card border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-border shrink-0">
+        <div className="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 border-b border-border bg-surface shrink-0">
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-semibold text-foreground truncate">{client.name}</h2>
             <p className="text-xs text-muted-foreground">Client details & actions</p>
@@ -181,7 +181,7 @@ function ClientModal({
             {/* Contact info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
               {client.email && (
-                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border">
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-surface border border-border">
                   <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="min-w-0">
                     <p className="text-[10px] text-muted-foreground mb-0.5">Email</p>
@@ -190,7 +190,7 @@ function ClientModal({
                 </div>
               )}
               {client.mobile && (
-                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border">
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-surface border border-border">
                   <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="min-w-0">
                     <p className="text-[10px] text-muted-foreground mb-0.5">Mobile</p>
@@ -199,7 +199,7 @@ function ClientModal({
                 </div>
               )}
               {client.address && (
-                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border sm:col-span-2">
+                <div className="flex items-start gap-2.5 p-3 rounded-lg bg-surface border border-border sm:col-span-2">
                   <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
                   <div className="min-w-0">
                     <p className="text-[10px] text-muted-foreground mb-0.5">Address</p>
@@ -217,7 +217,7 @@ function ClientModal({
                   <table className="w-full text-xs">
                     <tbody className="divide-y divide-border">
                       {rawData.map(([key, val]) => (
-                        <tr key={key} className="hover:bg-muted/30 transition-colors">
+                        <tr key={key} className="hover:bg-surface/50 transition-colors">
                           <td className="px-3 py-2 text-muted-foreground w-1/2 font-medium">{key}</td>
                           <td className="px-3 py-2 text-foreground">{String(val ?? "—")}</td>
                         </tr>
@@ -245,7 +245,7 @@ function ClientModal({
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs whitespace-nowrap">
                       <thead>
-                        <tr className="bg-muted/50 border-b border-border">
+                        <tr className="bg-surface border-b border-border">
                           <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground">Type</th>
                           <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground">Status</th>
                           <th className="px-3 py-2 text-center text-[10px] font-medium text-muted-foreground">
@@ -257,7 +257,7 @@ function ClientModal({
                       </thead>
                       <tbody className="divide-y divide-border">
                         {client.notices.map((notice) => (
-                          <tr key={notice.id} className="hover:bg-muted/30 transition-colors">
+                          <tr key={notice.id} className="hover:bg-surface/50 transition-colors">
                             <td className="px-3 py-2.5 font-medium text-foreground">
                               {(notice.template?.noticeType || "").replace(/_/g, " ")}
                             </td>
@@ -287,7 +287,7 @@ function ClientModal({
                                   disabled={sendingId === notice.id || sendSuccessId === notice.id || !gmailConnected}
                                   className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
                                     sendSuccessId === notice.id
-                                      ? "bg-green-500/10 text-green-600"
+                                      ? "bg-green-500/10 text-green-700 dark:text-green-400"
                                       : "bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-50"
                                   }`}
                                 >
@@ -319,7 +319,7 @@ function ClientModal({
                 <select
                   value={noticeType}
                   onChange={(e) => setNoticeType(e.target.value as NoticeTypeValue)}
-                  className="w-full appearance-none px-3 py-2.5 pr-8 bg-background text-foreground border border-border rounded-lg outline-none text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                  className="w-full appearance-none px-3 py-2.5 pr-8 bg-card text-foreground border border-border rounded-lg outline-none text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-2xs"
                 >
                   {NOTICE_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -331,12 +331,12 @@ function ClientModal({
               <button
                 onClick={handleGenerate}
                 disabled={generating}
-                className="w-full px-4 py-2.5 text-sm font-medium border border-border bg-background rounded-lg hover:border-primary hover:text-foreground transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full px-4 py-2.5 text-sm font-medium border border-border bg-card rounded-lg hover:border-primary hover:text-foreground transition-all shadow-2xs disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {generating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>
                 ) : newNotice ? (
-                  <><CheckCircle2 className="w-4 h-4 text-green-500" /> Generated</>
+                  <><CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" /> Generated</>
                 ) : "Generate Notice"}
               </button>
 
@@ -358,9 +358,9 @@ function ClientModal({
                     disabled={sendingId === newNotice.id || sendSuccessId === newNotice.id || !gmailConnected}
                     className={`w-full px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${
                       sendSuccessId === newNotice.id 
-                        ? "bg-green-500 text-white" 
+                        ? "bg-green-600 text-white" 
                         : gmailConnected 
-                          ? "bg-foreground text-background hover:bg-foreground/90 shadow-sm" 
+                          ? "bg-accent text-white hover:bg-accent/90 shadow-xs" 
                           : "bg-muted text-muted-foreground cursor-not-allowed"
                     }`}
                   >
@@ -577,10 +577,10 @@ export default function BatchPage() {
     return (
       <DashboardLayout activeNav="dashboard">
         <div className="space-y-12 max-w-6xl animate-pulse">
-          <div className="h-[200px] rounded-lg bg-muted" />
+          <div className="h-[200px] rounded-lg bg-card border border-border" />
           <div className="space-y-3">
             <div className="h-4 w-32 bg-muted rounded" />
-            {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-muted rounded-md" />)}
+            {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-card border border-border rounded-md" />)}
           </div>
         </div>
       </DashboardLayout>
@@ -598,6 +598,7 @@ export default function BatchPage() {
   return (
     <DashboardLayout activeNav="dashboard">
       <div className="space-y-10 max-w-6xl">
+
         {/* ============================================================== */}
         {/* TOP HEADER */}
         {/* ============================================================== */}
@@ -615,7 +616,7 @@ export default function BatchPage() {
                 {batch.name}
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5">
-                <span className="font-medium">{batch._count.clients} clients</span>
+                <span className="font-medium text-foreground">{batch._count.clients} clients</span>
                 <span className="mx-2">·</span>
                 <span>Uploaded {formatDate(batch.createdAt)}</span>
               </p>
@@ -626,7 +627,7 @@ export default function BatchPage() {
         {/* ============================================================== */}
         {/* GMAIL STATUS & BULK SEND */}
         {/* ============================================================== */}
-        <section className="bg-muted/30 border border-border rounded-xl p-4 sm:p-6 space-y-5 sm:space-y-6">
+        <section className="bg-card border border-border rounded-xl p-4 sm:p-6 space-y-5 sm:space-y-6 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Bulk Send Notices</h2>
@@ -635,7 +636,7 @@ export default function BatchPage() {
               </p>
             </div>
             {gmailConnected ? (
-              <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 bg-background border border-border rounded-lg shadow-sm max-w-full">
+              <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 bg-card border border-border rounded-lg shadow-2xs max-w-full">
                 <div className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
                 <span className="text-xs font-medium text-foreground truncate max-w-[150px] sm:max-w-none">{gmailAddress}</span>
                 <button onClick={handleDisconnectGmail} className="text-xs font-medium text-muted-foreground hover:text-destructive underline-offset-2 transition-colors border-l border-border pl-2 sm:pl-3 ml-1 shrink-0">
@@ -646,7 +647,7 @@ export default function BatchPage() {
               <button 
                 onClick={handleConnectGmail} 
                 disabled={gmailConnecting}
-                className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
+                className="text-xs font-medium bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors shadow-xs flex items-center justify-center gap-2 w-full sm:w-auto"
               >
                 {gmailConnecting ? "Connecting..." : "Connect Gmail to send"}
               </button>
@@ -660,7 +661,7 @@ export default function BatchPage() {
                 <select
                   value={bulkNoticeType}
                   onChange={(e) => setBulkNoticeType(e.target.value as NoticeTypeValue)}
-                  className="w-full appearance-none px-3 py-2.5 pr-8 bg-background text-foreground border border-border rounded-lg outline-none text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
+                  className="w-full appearance-none px-3 py-2.5 pr-8 bg-card text-foreground border border-border rounded-lg outline-none text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-2xs"
                 >
                   {NOTICE_TYPES.map((t) => (
                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -673,7 +674,7 @@ export default function BatchPage() {
               <button
                 onClick={handleBulkSendAll}
                 disabled={bulkSending || !gmailConnected}
-                className="w-full md:w-auto px-6 py-2.5 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 disabled:opacity-50 transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-6 py-2.5 bg-accent text-white text-sm font-medium rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors shadow-xs flex items-center justify-center gap-2"
               >
                 Generate & Send All →
               </button>
@@ -687,7 +688,7 @@ export default function BatchPage() {
                 <span>Sending {bulkProgress.current} of {bulkProgress.total} notices...</span>
                 <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
               </div>
-              <div className="w-full h-2 bg-border rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-primary transition-all duration-300 ease-out"
                   style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
@@ -698,9 +699,9 @@ export default function BatchPage() {
 
           {/* Results Summary */}
           {bulkResults && !bulkSending && (
-            <div className="border border-border rounded-lg overflow-hidden bg-background shadow-sm">
-              <div className="px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-foreground flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
+            <div className="border border-border rounded-lg overflow-hidden bg-card shadow-xs">
+              <div className="px-4 py-3 bg-surface border-b border-border text-sm font-medium text-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                 {bulkResults.succeeded} sent · {bulkResults.skipped} skipped (no email) · {bulkResults.failed} failed
               </div>
               {bulkResults.errors.length > 0 && (
@@ -735,17 +736,17 @@ export default function BatchPage() {
                   placeholder="Search clients..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm"
+                  className="w-full pl-9 pr-4 py-2 bg-card border border-border rounded-lg text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-2xs"
                 />
               </div>
             </div>
           </div>
 
-          <div className="border border-border rounded-xl bg-background overflow-hidden shadow-sm">
+          <div className="border border-border rounded-xl bg-card overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-sm whitespace-nowrap">
                 <thead>
-                  <tr className="bg-muted/50 border-b border-border">
+                  <tr className="bg-surface border-b border-border">
                     <th className="px-5 py-3.5 text-left text-xs font-medium text-muted-foreground">Client Name</th>
                     <th className="px-5 py-3.5 text-left text-xs font-medium text-muted-foreground">Mobile</th>
                     <th className="px-5 py-3.5 text-left text-xs font-medium text-muted-foreground">Email</th>
@@ -759,7 +760,7 @@ export default function BatchPage() {
                       <tr
                         key={client.id}
                         onClick={() => setSelectedClient(client)}
-                        className="hover:bg-muted/40 transition-colors group cursor-pointer"
+                        className="hover:bg-surface/70 transition-colors group cursor-pointer"
                       >
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
@@ -773,7 +774,7 @@ export default function BatchPage() {
                         <td className="px-5 py-3.5 text-muted-foreground text-xs truncate max-w-[150px]">{client.email || "—"}</td>
                         <td className="px-5 py-3.5">
                           {client.notices && client.notices.length > 0 ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-accent/10 text-accent border border-accent/15">
                               {client.notices.length}
                             </span>
                           ) : (
@@ -812,7 +813,7 @@ export default function BatchPage() {
 
             {/* Pagination */}
             {filteredClients.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 px-4 sm:px-5 py-3 border-t border-border bg-muted/20 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 px-4 sm:px-5 py-3 border-t border-border bg-surface text-center sm:text-left">
                 <p className="text-xs text-muted-foreground">
                   Showing {(page - 1) * PAGE_SIZE + 1} to {Math.min(page * PAGE_SIZE, filteredClients.length)} of {filteredClients.length}
                 </p>

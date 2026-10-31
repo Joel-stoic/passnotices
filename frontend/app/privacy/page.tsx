@@ -3,7 +3,7 @@ import { Footer } from "@/components/footer";
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-grow max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 w-full">
         <div className="space-y-6 sm:space-y-8 text-secondary leading-relaxed">
