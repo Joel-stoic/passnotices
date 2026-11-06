@@ -14,6 +14,12 @@ import { downloadFromR2 } from "../../lib/storage";
 
 const router = Router();
 
+function getTenantId(req: Request): string {
+  const id = req.auth?.tenantId;
+  if (Array.isArray(id)) return id[0] ?? "";
+  return String(id ?? "");
+}
+
 async function getFileBuffer(fileUrl: string): Promise<Buffer> {
   try {
     return await downloadFromR2(fileUrl);
@@ -43,7 +49,7 @@ const upload = multer({
 router.get("/", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
     const templates = await prisma.noticeTemplate.findMany({
-      where: { tenantId: req.auth!.tenantId },
+      where: { tenantId: getTenantId(req) },
       orderBy: { createdAt: "desc" },
     });
     return res.json({ success: true, templates });
@@ -62,7 +68,7 @@ router.post("/", authMiddleware, tenantMiddleware, upload.single("file"), async 
     if (!parsed.success) {
       return res.status(400).json({ error: parsed.error.flatten() });
     }
-    const template = await createTemplate(req.auth!.tenantId, parsed.data.noticeType, req.file);
+    const template = await createTemplate(getTenantId(req), parsed.data.noticeType, req.file);
     return res.status(201).json({ success: true, template });
   } catch (error: any) {
     return res.status(400).json({ error: error.message || "Template upload failed" });
@@ -73,7 +79,7 @@ router.post("/", authMiddleware, tenantMiddleware, upload.single("file"), async 
 router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
     const template = await prisma.noticeTemplate.findFirst({
-      where: { id: req.params.id, tenantId: req.auth!.tenantId },
+      where: { id: String(req.params.id), tenantId: getTenantId(req) },
     });
     if (!template) return res.json({ found: false });
 
@@ -94,13 +100,13 @@ router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
 // PREVIEW handler
 async function handlePreview(req: Request, res: Response) {
   try {
-    const paramId = req.params.id || (req.query.id as string) || "";
+    const paramId = String(req.params.id || (req.query.id as string) || "");
     if (!paramId) {
       return res.status(400).json({ error: "Template ID is required" });
     }
 
     const template = await prisma.noticeTemplate.findFirst({
-      where: { id: paramId, tenantId: req.auth!.tenantId },
+      where: { id: paramId, tenantId: getTenantId(req) },
     });
 
     if (!template) {
@@ -164,13 +170,13 @@ router.get("/preview", authMiddleware, tenantMiddleware, handlePreview);
 // DOWNLOAD handler
 async function handleDownload(req: Request, res: Response) {
   try {
-    const paramId = req.params.id || (req.query.id as string) || "";
+    const paramId = String(req.params.id || (req.query.id as string) || "");
     if (!paramId) {
       return res.status(400).json({ error: "Template ID is required" });
     }
 
     const template = await prisma.noticeTemplate.findFirst({
-      where: { id: paramId, tenantId: req.auth!.tenantId },
+      where: { id: paramId, tenantId: getTenantId(req) },
     });
 
     if (!template) {
@@ -204,7 +210,7 @@ router.get("/download", authMiddleware, tenantMiddleware, handleDownload);
 // DELETE /api/templates/:id
 router.delete("/:id", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
-    await deleteTemplate(req.auth!.tenantId, String(req.params.id));
+    await deleteTemplate(getTenantId(req), String(req.params.id));
     return res.json({ success: true, message: "Template deleted" });
   } catch (error: any) {
     return res.status(500).json({ error: error.message || "Failed to delete template" });
