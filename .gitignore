@@ -12,8 +12,6 @@ backend/node_modules/
 frontend/node_modules/
 
 # Build outputs
-dist/
-backend/dist/
 frontend/.next/
 
 # Upload folders (local files, not for git)

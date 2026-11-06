@@ -93,13 +93,7 @@ async function parseApiResponse<T>(res: Response, fallbackError: string): Promis
         errMsg = Object.values(errObj.error.fieldErrors).flat().join(". ");
       }
     } else {
-      let urlPath = "";
-      try {
-        urlPath = new URL(res.url).pathname;
-      } catch {
-        urlPath = res.url;
-      }
-      errMsg = `${fallbackError} (${res.status} from ${urlPath})`;
+      errMsg = `${fallbackError} (${res.status} from ${res.url})`;
     }
     throw new Error(errMsg);
   }
