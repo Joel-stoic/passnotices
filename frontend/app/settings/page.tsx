@@ -43,12 +43,14 @@ function TemplatePreviewModal({
   template,
   preview,
   loading,
+  downloading,
   onClose,
   onDownload,
 }: {
   template: Template;
   preview: TemplatePreview | null;
   loading: boolean;
+  downloading?: boolean;
   onClose: () => void;
   onDownload: () => void;
 }) {
@@ -83,10 +85,20 @@ function TemplatePreviewModal({
           <div className="flex items-center gap-2">
             <button
               onClick={onDownload}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-2xs"
+              disabled={downloading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-2xs disabled:opacity-60"
             >
-              <Download className="w-3.5 h-3.5" />
-              Download .docx
+              {downloading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Downloading…
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  Download .docx
+                </>
+              )}
             </button>
             <button
               onClick={onClose}
@@ -144,8 +156,11 @@ function TemplatePreviewModal({
               </div>
             </>
           ) : (
-            <div className="text-center py-16 text-secondary text-xs">
-              Could not load document preview. You can still download the file using the button above.
+            <div className="text-center py-16 text-secondary text-xs space-y-2">
+              <p className="font-medium text-foreground">Could not render in-app document preview.</p>
+              <p className="text-secondary text-[11px]">
+                You can still download the original .docx file using the &quot;Download .docx&quot; button above.
+              </p>
             </div>
           )}
         </div>
@@ -463,6 +478,7 @@ export default function SettingsPage() {
           template={selectedTemplate}
           preview={previewData}
           loading={previewLoading}
+          downloading={downloadingId === selectedTemplate.id}
           onClose={() => {
             setSelectedTemplate(null);
             setPreviewData(null);

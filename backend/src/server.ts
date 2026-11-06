@@ -13,10 +13,28 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-}));
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+].filter(Boolean) as string[];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.startsWith("http://localhost:") ||
+        origin.startsWith("http://127.0.0.1:")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // API routes
@@ -27,15 +45,20 @@ app.use("/api/templates", templateRouter);
 app.use("/api/notices", noticeRouter);
 app.use("/api/gmail", gmailRouter);
 
+// Health check
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
+// 404 Catch-all for API routes — always return JSON, never HTML
+app.use("/api", (req, res) => {
+  res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` });
+});
+
 // Global error handler — never expose internals to client
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Something went wrong. Please try again." });
-});
-
-// Health check
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
 });
 
 const PORT = process.env.PORT || 4000;

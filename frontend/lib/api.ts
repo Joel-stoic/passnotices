@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+const BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/+$/, "");
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,6 +51,46 @@ export function getStoredUser(): AuthUser | null {
   }
 }
 
+function authHeaders(): Record<string, string> {
+  const token = typeof window !== "undefined"
+    ? localStorage.getItem("passnotice_token")
+    : null;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/**
+ * Safely parse JSON responses without throwing "Unexpected token '<'..."
+ * if an HTML error page (e.g. 404, 502) is returned.
+ */
+async function parseApiResponse<T>(res: Response, fallbackError: string): Promise<T> {
+  const contentType = res.headers.get("content-type") || "";
+  let data: any = null;
+
+  if (contentType.includes("application/json")) {
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!res.ok) {
+    let errMsg = fallbackError;
+    if (typeof data?.error === "string") {
+      errMsg = data.error;
+    } else if (data?.error?.formErrors?.[0]) {
+      errMsg = data.error.formErrors[0];
+    } else if (data?.error?.fieldErrors) {
+      errMsg = Object.values(data.error.fieldErrors).flat().join(". ");
+    } else {
+      errMsg = `Request failed (${res.status}: ${res.statusText || fallbackError})`;
+    }
+    throw new Error(errMsg);
+  }
+
+  return (data !== null ? data : ({} as any)) as T;
+}
+
 // ─── Auth API calls ───────────────────────────────────────────────────────────
 
 export async function apiLogin(email: string, password: string): Promise<LoginResponse> {
@@ -59,18 +99,7 @@ export async function apiLogin(email: string, password: string): Promise<LoginRe
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    const errMsg =
-      typeof data.error === "string"
-        ? data.error
-        : data.error?.formErrors?.[0] ?? "Login failed";
-    throw new Error(errMsg);
-  }
-
-  return data as LoginResponse;
+  return parseApiResponse<LoginResponse>(res, "Login failed");
 }
 
 export async function apiSignup(
@@ -83,20 +112,7 @@ export async function apiSignup(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ tenantName, email, password }),
   });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    const errMsg =
-      typeof data.error === "string"
-        ? data.error
-        : data.error?.formErrors?.[0] ??
-          Object.values(data.error?.fieldErrors ?? {}).flat().join(". ") ??
-          "Signup failed";
-    throw new Error(errMsg);
-  }
-
-  return data as SignupResponse;
+  return parseApiResponse<SignupResponse>(res, "Signup failed");
 }
 
 // ─── Clients API ──────────────────────────────────────────────────────────────
@@ -124,57 +140,45 @@ export interface Batch {
   _count: { clients: number };
 }
 
-function authHeaders(): Record<string, string> {
-  const token = typeof window !== "undefined"
-    ? localStorage.getItem("passnotice_token")
-    : null;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export async function apiGetClients(batchId?: string): Promise<Client[]> {
   const url = batchId
-    ? `${BASE_URL}/api/clients?batchId=${batchId}`
+    ? `${BASE_URL}/api/clients?batchId=${encodeURIComponent(batchId)}`
     : `${BASE_URL}/api/clients`;
   const res = await fetch(url, { headers: authHeaders() });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to fetch clients");
-  return data.clients as Client[];
+  const data = await parseApiResponse<{ clients: Client[] }>(res, "Failed to fetch clients");
+  return data.clients ?? [];
 }
 
 export async function apiGetBatches(): Promise<Batch[]> {
   const res = await fetch(`${BASE_URL}/api/clients/batches`, {
     headers: authHeaders(),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to fetch batches");
-  return data.batches;
+  const data = await parseApiResponse<{ batches: Batch[] }>(res, "Failed to fetch batches");
+  return data.batches ?? [];
 }
 
 export async function apiDeleteBatch(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/clients/batches/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/clients/batches/${encodeURIComponent(id)}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to delete batch");
+  await parseApiResponse(res, "Failed to delete batch");
 }
 
 export async function apiGetClient(id: string): Promise<Client> {
-  const res = await fetch(`${BASE_URL}/api/clients/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/clients/${encodeURIComponent(id)}`, {
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to fetch client");
-  return data.client as Client;
+  const data = await parseApiResponse<{ client: Client }>(res, "Failed to fetch client");
+  return data.client;
 }
 
 export async function apiDeleteClient(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/clients/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/clients/${encodeURIComponent(id)}`, {
     method: "DELETE",
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to delete client");
+  await parseApiResponse(res, "Failed to delete client");
 }
 
 // ─── Notices API ──────────────────────────────────────────────────────────────
@@ -206,20 +210,8 @@ export async function apiGenerateNotice(
     },
     body: JSON.stringify({ clientId, noticeType }),
   });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    const msg =
-      typeof data.error === "string"
-        ? data.error
-        : data.error?.formErrors?.[0] ??
-          Object.values(data.error?.fieldErrors ?? {}).flat().join(". ") ??
-          "Notice generation failed";
-    throw new Error(msg);
-  }
-
-  return data.notice as GeneratedNotice;
+  const data = await parseApiResponse<{ notice: GeneratedNotice }>(res, "Notice generation failed");
+  return data.notice;
 }
 
 export async function apiGenerateAndSendAll(
@@ -237,9 +229,7 @@ export async function apiGenerateAndSendAll(
     headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ noticeType, batchId }),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Bulk send failed");
-  return data;
+  return parseApiResponse(res, "Bulk send failed");
 }
 
 // ─── Gmail API ────────────────────────────────────────────────────────────────
@@ -248,28 +238,23 @@ export async function apiGetGmailStatus(): Promise<{ connected: boolean; emailAd
   const res = await fetch(`${BASE_URL}/api/gmail/status`, {
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to get Gmail status");
-  return data;
+  return parseApiResponse(res, "Failed to get Gmail status");
 }
 
 export async function apiGetGmailConnectUrl(): Promise<string> {
   const res = await fetch(`${BASE_URL}/api/gmail/connect`, {
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to get connect URL");
+  const data = await parseApiResponse<{ url: string }>(res, "Failed to get connect URL");
   return data.url;
 }
 
 export async function apiSendNoticeViaGmail(noticeId: string): Promise<{ success: boolean; sentTo: string }> {
-  const res = await fetch(`${BASE_URL}/api/gmail/send/${noticeId}`, {
+  const res = await fetch(`${BASE_URL}/api/gmail/send/${encodeURIComponent(noticeId)}`, {
     method: "POST",
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to send email");
-  return data;
+  return parseApiResponse(res, "Failed to send email");
 }
 
 export async function apiDisconnectGmail(): Promise<void> {
@@ -277,8 +262,7 @@ export async function apiDisconnectGmail(): Promise<void> {
     method: "DELETE",
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to disconnect Gmail");
+  await parseApiResponse(res, "Failed to disconnect Gmail");
 }
 
 // ─── Templates API ────────────────────────────────────────────────────────────
@@ -304,28 +288,26 @@ export async function apiGetTemplates(): Promise<Template[]> {
   const res = await fetch(`${BASE_URL}/api/templates`, {
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to fetch templates");
-  return data.templates;
+  const data = await parseApiResponse<{ templates: Template[] }>(res, "Failed to fetch templates");
+  return data.templates ?? [];
 }
 
 export async function apiGetTemplatePreview(id: string): Promise<TemplatePreview> {
-  const res = await fetch(`${BASE_URL}/api/templates/${id}/preview`, {
+  const res = await fetch(`${BASE_URL}/api/templates/${encodeURIComponent(id)}/preview`, {
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to load template preview");
-  return data;
+  return parseApiResponse<TemplatePreview>(res, "Failed to load template preview");
 }
 
 export async function apiDownloadTemplate(id: string, filename: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/templates/${id}/download`, {
+  const res = await fetch(`${BASE_URL}/api/templates/${encodeURIComponent(id)}/download`, {
     headers: { ...authHeaders() },
   });
+
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error ?? "Failed to download template");
+    await parseApiResponse(res, "Failed to download template");
   }
+
   const blob = await res.blob();
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -338,10 +320,9 @@ export async function apiDownloadTemplate(id: string, filename: string): Promise
 }
 
 export async function apiDeleteTemplate(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/templates/${id}`, {
+  const res = await fetch(`${BASE_URL}/api/templates/${encodeURIComponent(id)}`, {
     method: "DELETE",
     headers: { ...authHeaders() },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to delete template");
+  await parseApiResponse(res, "Failed to delete template");
 }

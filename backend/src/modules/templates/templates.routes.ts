@@ -1,4 +1,5 @@
 import path from "path";
+import fs from "fs";
 import { Router } from "express";
 import multer from "multer";
 import PizZip from "pizzip";
@@ -11,6 +12,22 @@ import { prisma } from "../../lib/prisma";
 import { downloadFromR2 } from "../../lib/storage";
 
 const router = Router();
+
+// Helper to fetch buffer from R2 with local disk fallback
+async function getFileBuffer(fileUrl: string): Promise<Buffer> {
+  try {
+    return await downloadFromR2(fileUrl);
+  } catch (r2Err: any) {
+    const cleanPath = fileUrl.startsWith("/") ? fileUrl.slice(1) : fileUrl;
+    const localPath = path.resolve(process.cwd(), cleanPath);
+    if (fs.existsSync(localPath)) {
+      return fs.readFileSync(localPath);
+    }
+    throw new Error(
+      `File not accessible in storage: ${r2Err?.message || "Storage error"}`
+    );
+  }
+}
 
 // Use memory storage — no disk needed since we upload directly to R2
 const upload = multer({
@@ -35,8 +52,8 @@ router.get("/", authMiddleware, tenantMiddleware, async (req, res) => {
       orderBy: { createdAt: "desc" },
     });
     return res.json({ success: true, templates });
-  } catch {
-    return res.status(500).json({ error: "Failed to fetch templates" });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || "Failed to fetch templates" });
   }
 });
 
@@ -80,35 +97,58 @@ router.post(
 
 router.get("/:id/preview", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
+    const paramId = String(req.params.id);
     const template = await prisma.noticeTemplate.findFirst({
-      where: { id: String(req.params.id), tenantId: req.auth!.tenantId },
+      where: {
+        tenantId: req.auth!.tenantId,
+        OR: [
+          { id: paramId },
+          { noticeType: paramId },
+        ],
+      },
     });
 
     if (!template) {
       return res.status(404).json({ error: "Template not found" });
     }
 
-    const buffer = await downloadFromR2(template.fileUrl);
-    const zip = new PizZip(buffer);
-    const documentXml = zip.files["word/document.xml"]?.asText() || "";
+    let buffer: Buffer;
+    try {
+      buffer = await getFileBuffer(template.fileUrl);
+    } catch (storageErr: any) {
+      return res.status(404).json({
+        error: "Template file is missing or inaccessible in storage. Please re-upload.",
+      });
+    }
 
-    // Extract readable paragraphs from docx XML
-    const text = documentXml
-      .replace(/<w:p[^>]*>/g, "")
-      .replace(/<\/w:p>/g, "\n\n")
-      .replace(/<w:br[^>]*>/g, "\n")
-      .replace(/<w:tab[^>]*>/g, "\t")
-      .replace(/<[^>]+>/g, "")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&amp;/g, "&")
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .trim();
+    let text = "";
+    let placeholders: string[] = [];
 
-    // Extract dynamic placeholders {{...}}
-    const matches = Array.from(text.matchAll(/\{\{([^{}]+)\}\}/g)).map((m) => m[1].trim());
-    const placeholders = Array.from(new Set(matches)).filter(Boolean);
+    try {
+      const zip = new PizZip(buffer);
+      const documentXml = zip.files["word/document.xml"]?.asText() || "";
+
+      // Extract readable paragraphs from docx XML
+      text = documentXml
+        .replace(/<w:p[^>]*>/g, "")
+        .replace(/<\/w:p>/g, "\n\n")
+        .replace(/<w:br[^>]*>/g, "\n")
+        .replace(/<w:tab[^>]*>/g, "\t")
+        .replace(/<[^>]+>/g, "")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .trim();
+
+      // Extract dynamic placeholders {{...}}
+      const matches = Array.from(text.matchAll(/\{\{([^{}]+)\}\}/g)).map((m) => m[1].trim());
+      placeholders = Array.from(new Set(matches)).filter(Boolean);
+    } catch (parseErr) {
+      console.warn("Failed to parse docx XML:", parseErr);
+      text = "Document uploaded successfully. Content preview is unavailable for this formatting.";
+    }
 
     return res.json({
       success: true,
@@ -116,7 +156,7 @@ router.get("/:id/preview", authMiddleware, tenantMiddleware, async (req, res) =>
       noticeType: template.noticeType,
       fileUrl: template.fileUrl,
       createdAt: template.createdAt,
-      text: text || "No text content found in document.",
+      text: text || "Document is empty or contains non-text elements.",
       placeholders,
     });
   } catch (error: any) {
@@ -131,15 +171,30 @@ router.get("/:id/preview", authMiddleware, tenantMiddleware, async (req, res) =>
 
 router.get("/:id/download", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
+    const paramId = String(req.params.id);
     const template = await prisma.noticeTemplate.findFirst({
-      where: { id: String(req.params.id), tenantId: req.auth!.tenantId },
+      where: {
+        tenantId: req.auth!.tenantId,
+        OR: [
+          { id: paramId },
+          { noticeType: paramId },
+        ],
+      },
     });
 
     if (!template) {
       return res.status(404).json({ error: "Template not found" });
     }
 
-    const buffer = await downloadFromR2(template.fileUrl);
+    let buffer: Buffer;
+    try {
+      buffer = await getFileBuffer(template.fileUrl);
+    } catch (storageErr: any) {
+      return res.status(404).json({
+        error: "Template file is missing or inaccessible in storage. Please re-upload.",
+      });
+    }
+
     const filename = `${template.noticeType.toLowerCase().replace(/_/g, "-")}-template.docx`;
 
     res.setHeader(
@@ -147,6 +202,7 @@ router.get("/:id/download", authMiddleware, tenantMiddleware, async (req, res) =
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     );
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", buffer.length);
     return res.send(buffer);
   } catch (error: any) {
     return res.status(500).json({ error: error.message || "Failed to download template" });
