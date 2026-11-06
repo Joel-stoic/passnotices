@@ -56,7 +56,7 @@ app.use((err, _req, res, _next) => {
     console.error("Unhandled error:", err);
     res.status(500).json({ error: "Something went wrong. Please try again." });
 });
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 4000;
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
 });
