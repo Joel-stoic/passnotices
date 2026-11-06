@@ -1,6 +1,6 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 
 import authRouter from "./modules/auth/auth.routes";
 import clientsRouter from "./modules/clients/clients.routes";
@@ -8,8 +8,6 @@ import excelRouter from "./modules/excel/excel.routes";
 import templateRouter from "./modules/templates/templates.routes";
 import noticeRouter from "./modules/notices/notices.routes";
 import gmailRouter from "./modules/gmail/gmail.routes";
-
-dotenv.config();
 
 const app = express();
 

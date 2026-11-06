@@ -1,3 +1,4 @@
+import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { Router, Request, Response } from "express";
@@ -18,6 +19,7 @@ async function getFileBuffer(fileUrl: string): Promise<Buffer> {
   try {
     return await downloadFromR2(fileUrl);
   } catch (r2Err: any) {
+    console.warn(`[Storage] downloadFromR2 failed for key '${fileUrl}':`, r2Err?.message);
     const cleanPath = fileUrl.startsWith("/") ? fileUrl.slice(1) : fileUrl;
     const localPath = path.resolve(process.cwd(), cleanPath);
     if (fs.existsSync(localPath)) {
@@ -121,7 +123,7 @@ async function handlePreview(req: Request, res: Response) {
       buffer = await getFileBuffer(template.fileUrl);
     } catch (storageErr: any) {
       return res.status(404).json({
-        error: "Template file is missing or inaccessible in storage. Please re-upload.",
+        error: `Template file not accessible in Cloudflare R2: ${storageErr?.message || "Storage error"}. Please re-upload.`,
       });
     }
 
@@ -203,7 +205,7 @@ async function handleDownload(req: Request, res: Response) {
       buffer = await getFileBuffer(template.fileUrl);
     } catch (storageErr: any) {
       return res.status(404).json({
-        error: "Template file is missing or inaccessible in storage. Please re-upload.",
+        error: `Template file not accessible in Cloudflare R2: ${storageErr?.message || "Storage error"}. Please re-upload.`,
       });
     }
 

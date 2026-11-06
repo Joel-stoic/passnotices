@@ -1,3 +1,4 @@
+import "dotenv/config";
 import {
   S3Client,
   PutObjectCommand,
@@ -6,16 +7,39 @@ import {
 } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 
-const s3 = new S3Client({
-  region: "auto",
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
+let s3ClientInstance: S3Client | null = null;
 
-const BUCKET = process.env.R2_BUCKET_NAME!;
+export function getS3Client(): S3Client {
+  if (!s3ClientInstance) {
+    const accountId = process.env.R2_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+    if (!accountId || !accessKeyId || !secretAccessKey) {
+      console.warn(
+        "Warning: Cloudflare R2 environment variables are missing (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY)"
+      );
+    }
+
+    s3ClientInstance = new S3Client({
+      region: "auto",
+      endpoint: `https://${accountId || ""}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: accessKeyId || "",
+        secretAccessKey: secretAccessKey || "",
+      },
+    });
+  }
+  return s3ClientInstance;
+}
+
+export function getR2Bucket(): string {
+  const bucket = process.env.R2_BUCKET_NAME;
+  if (!bucket) {
+    throw new Error("Missing R2_BUCKET_NAME environment variable in .env");
+  }
+  return bucket;
+}
 
 // ─────────────────────────────────────────────
 // Upload a file buffer to R2
@@ -26,9 +50,12 @@ export async function uploadToR2(
   body: Buffer,
   contentType: string
 ): Promise<string> {
-  await s3.send(
+  const client = getS3Client();
+  const bucket = getR2Bucket();
+
+  await client.send(
     new PutObjectCommand({
-      Bucket: BUCKET,
+      Bucket: bucket,
       Key: key,
       Body: body,
       ContentType: contentType,
@@ -42,9 +69,12 @@ export async function uploadToR2(
 // Used for reading templates + sending attachments
 // ─────────────────────────────────────────────
 export async function downloadFromR2(key: string): Promise<Buffer> {
-  const response = await s3.send(
+  const client = getS3Client();
+  const bucket = getR2Bucket();
+
+  const response = await client.send(
     new GetObjectCommand({
-      Bucket: BUCKET,
+      Bucket: bucket,
       Key: key,
     })
   );
@@ -62,9 +92,12 @@ export async function downloadFromR2(key: string): Promise<Buffer> {
 // Delete a file from R2
 // ─────────────────────────────────────────────
 export async function deleteFromR2(key: string): Promise<void> {
-  await s3.send(
+  const client = getS3Client();
+  const bucket = getR2Bucket();
+
+  await client.send(
     new DeleteObjectCommand({
-      Bucket: BUCKET,
+      Bucket: bucket,
       Key: key,
     })
   );
