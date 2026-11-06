@@ -1,15 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import {
   apiGetTemplates, apiDeleteTemplate, apiGetGmailStatus,
-  apiGetGmailConnectUrl, apiDisconnectGmail, type Template,
+  apiGetGmailConnectUrl, apiDisconnectGmail, apiGetTemplatePreview,
+  apiDownloadTemplate, type Template, type TemplatePreview,
 } from "@/lib/api";
 import {
   Loader2, Trash2, CheckCircle2, AlertCircle,
   FileText, Mail, ShieldCheck, UploadCloud,
+  Eye, Download, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
@@ -33,12 +35,151 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+// ─────────────────────────────────────────────
+// Template Preview Modal
+// ─────────────────────────────────────────────
+
+function TemplatePreviewModal({
+  template,
+  preview,
+  loading,
+  onClose,
+  onDownload,
+}: {
+  template: Template;
+  preview: TemplatePreview | null;
+  loading: boolean;
+  onClose: () => void;
+  onDownload: () => void;
+}) {
+  const label = NOTICE_TYPES.find((n) => n.value === template.noticeType)?.label ?? template.noticeType;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative z-10 bg-card border border-border rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-surface shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 text-accent" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-foreground truncate">{label}</h2>
+              <p className="text-[11px] text-secondary">
+                Uploaded on {formatDate(template.createdAt)} · Word Document (.docx)
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onDownload}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white text-xs font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-2xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download .docx
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md hover:bg-muted text-secondary hover:text-foreground transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 p-5 space-y-5">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-secondary">
+              <Loader2 className="w-6 h-6 animate-spin text-accent" />
+              <p className="text-xs">Reading document content & placeholders...</p>
+            </div>
+          ) : preview ? (
+            <>
+              {/* Placeholders section */}
+              <div className="bg-surface border border-border rounded-lg p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-foreground uppercase tracking-wide">
+                    Detected Dynamic Placeholders ({preview.placeholders.length})
+                  </span>
+                  <span className="text-[10px] text-secondary">Filled from your Excel sheet</span>
+                </div>
+                {preview.placeholders.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {preview.placeholders.map((ph) => (
+                      <span
+                        key={ph}
+                        className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-mono font-medium bg-accent/10 text-accent border border-accent/15"
+                      >
+                        {`{{${ph}}}`}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-secondary italic">
+                    No dynamic &#123;&#123;PLACEHOLDERS&#125;&#125; detected in this document.
+                  </p>
+                )}
+              </div>
+
+              {/* Document Text View */}
+              <div>
+                <p className="text-[11px] font-semibold text-secondary uppercase tracking-wide mb-2">
+                  Document Content
+                </p>
+                <div className="bg-card border border-border rounded-lg p-5 sm:p-6 shadow-2xs font-sans text-xs sm:text-sm text-foreground leading-relaxed whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
+                  {preview.text}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-16 text-secondary text-xs">
+              Could not load document preview. You can still download the file using the button above.
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-border bg-surface flex items-center justify-between text-xs text-secondary">
+          <span>Editable in Microsoft Word, Google Docs, or LibreOffice.</span>
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 rounded-lg border border-border bg-card text-foreground hover:bg-muted transition-colors font-medium text-xs"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Settings Page
+// ─────────────────────────────────────────────
+
 export default function SettingsPage() {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [noticeType, setNoticeType] = useState("");
   const [uploadError, setUploadError] = useState("");
+
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<TemplatePreview | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const { data: gmailData, isLoading: gmailLoading } = useQuery({
     queryKey: queryKeys.gmail,
@@ -98,9 +239,39 @@ export default function SettingsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.templates });
       toast.success("Template deleted");
+      if (selectedTemplate) setSelectedTemplate(null);
     },
     onError: () => toast.error("Failed to delete template"),
   });
+
+  const handleOpenPreview = async (template: Template) => {
+    setSelectedTemplate(template);
+    setPreviewLoading(true);
+    setPreviewData(null);
+    try {
+      const data = await apiGetTemplatePreview(template.id);
+      setPreviewData(data);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to load document preview");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleDownload = async (template: Template, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const label = NOTICE_TYPES.find((n) => n.value === template.noticeType)?.label ?? template.noticeType;
+    const filename = `${template.noticeType.toLowerCase().replace(/_/g, "-")}-template.docx`;
+    setDownloadingId(template.id);
+    try {
+      await apiDownloadTemplate(template.id, filename);
+      toast.success(`Downloaded ${label} template`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to download document");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (gmailLoading || templatesLoading) {
     return (
@@ -210,12 +381,12 @@ export default function SettingsPage() {
             ) : (
               <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[400px]">
+                  <table className="w-full text-sm min-w-[420px]">
                     <thead>
                       <tr className="bg-surface border-b border-border">
                         <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Notice type</th>
                         <th className="px-4 sm:px-5 py-2.5 text-left text-[10px] font-semibold text-secondary uppercase tracking-widest">Uploaded</th>
-                        <th className="px-4 sm:px-5 py-2.5 w-12" />
+                        <th className="px-4 sm:px-5 py-2.5 text-right text-[10px] font-semibold text-secondary uppercase tracking-widest w-28">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -231,11 +402,37 @@ export default function SettingsPage() {
                             </td>
                             <td className="px-4 sm:px-5 py-3.5 text-xs text-secondary">{formatDate(t.createdAt)}</td>
                             <td className="px-4 sm:px-5 py-3.5 text-right">
-                              <button onClick={() => { if (confirm(`Delete "${label}"?`)) deleteMutation.mutate(t.id); }}
-                                className="w-7 h-7 rounded-md flex items-center justify-center text-secondary hover:text-red-500 hover:bg-red-500/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all ml-auto"
-                                aria-label={`Delete ${label} template`}>
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => handleOpenPreview(t)}
+                                  className="w-7 h-7 rounded-md flex items-center justify-center text-secondary hover:text-accent hover:bg-accent/10 transition-colors"
+                                  title="View document"
+                                  aria-label={`View ${label} document`}
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => handleDownload(t, e)}
+                                  disabled={downloadingId === t.id}
+                                  className="w-7 h-7 rounded-md flex items-center justify-center text-secondary hover:text-accent hover:bg-accent/10 transition-colors disabled:opacity-50"
+                                  title="Download .docx"
+                                  aria-label={`Download ${label} document`}
+                                >
+                                  {downloadingId === t.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Download className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => { if (confirm(`Delete "${label}"?`)) deleteMutation.mutate(t.id); }}
+                                  className="w-7 h-7 rounded-md flex items-center justify-center text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                  title="Delete template"
+                                  aria-label={`Delete ${label} template`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -259,6 +456,20 @@ export default function SettingsPage() {
           </div>
         </section>
       </div>
+
+      {/* Template Viewer Modal */}
+      {selectedTemplate && (
+        <TemplatePreviewModal
+          template={selectedTemplate}
+          preview={previewData}
+          loading={previewLoading}
+          onClose={() => {
+            setSelectedTemplate(null);
+            setPreviewData(null);
+          }}
+          onDownload={() => handleDownload(selectedTemplate)}
+        />
+      )}
     </DashboardLayout>
   );
 }

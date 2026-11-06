@@ -44,6 +44,13 @@ export async function handleOAuthCallback(code: string, tenantId: string) {
     throw new Error("Failed to get tokens from Google");
   }
 
+  // Ensure gmail.send scope was actually granted by the user
+  if (tokens.scope && !tokens.scope.includes("gmail.send")) {
+    throw new Error(
+      "Permission missing: You must check the box to allow PassNotice to 'Send email on your behalf' during Google sign-in."
+    );
+  }
+
   oauth2Client.setCredentials(tokens);
   const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
   const userInfo = await oauth2.userinfo.get();

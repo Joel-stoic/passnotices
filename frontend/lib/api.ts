@@ -291,6 +291,15 @@ export interface Template {
   createdAt: string;
 }
 
+export interface TemplatePreview {
+  id: string;
+  noticeType: string;
+  fileUrl: string;
+  createdAt: string;
+  text: string;
+  placeholders: string[];
+}
+
 export async function apiGetTemplates(): Promise<Template[]> {
   const res = await fetch(`${BASE_URL}/api/templates`, {
     headers: { ...authHeaders() },
@@ -298,6 +307,34 @@ export async function apiGetTemplates(): Promise<Template[]> {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to fetch templates");
   return data.templates;
+}
+
+export async function apiGetTemplatePreview(id: string): Promise<TemplatePreview> {
+  const res = await fetch(`${BASE_URL}/api/templates/${id}/preview`, {
+    headers: { ...authHeaders() },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load template preview");
+  return data;
+}
+
+export async function apiDownloadTemplate(id: string, filename: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/api/templates/${id}/download`, {
+    headers: { ...authHeaders() },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to download template");
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }
 
 export async function apiDeleteTemplate(id: string): Promise<void> {
