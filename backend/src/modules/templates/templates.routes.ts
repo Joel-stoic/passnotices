@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import multer from "multer";
 import PizZip from "pizzip";
 
@@ -91,13 +91,17 @@ router.post(
 );
 
 // ─────────────────────────────────────────────
-// GET /api/templates/:id/preview
-// View content and placeholders of the template
+// Handler: Template Preview
+// Supports /:id/preview, /preview/:id, and /preview?id=
 // ─────────────────────────────────────────────
 
-router.get("/:id/preview", authMiddleware, tenantMiddleware, async (req, res) => {
+async function handlePreview(req: Request, res: Response) {
   try {
-    const paramId = String(req.params.id);
+    const paramId = String(req.params.id || req.query.id || "");
+    if (!paramId) {
+      return res.status(400).json({ error: "Template ID is required" });
+    }
+
     const template = await prisma.noticeTemplate.findFirst({
       where: {
         tenantId: req.auth!.tenantId,
@@ -162,16 +166,24 @@ router.get("/:id/preview", authMiddleware, tenantMiddleware, async (req, res) =>
   } catch (error: any) {
     return res.status(500).json({ error: error.message || "Failed to preview template" });
   }
-});
+}
+
+router.get("/:id/preview", authMiddleware, tenantMiddleware, handlePreview);
+router.get("/preview/:id", authMiddleware, tenantMiddleware, handlePreview);
+router.get("/preview", authMiddleware, tenantMiddleware, handlePreview);
 
 // ─────────────────────────────────────────────
-// GET /api/templates/:id/download
-// Download the raw .docx template
+// Handler: Template Download
+// Supports /:id/download, /download/:id, and /download?id=
 // ─────────────────────────────────────────────
 
-router.get("/:id/download", authMiddleware, tenantMiddleware, async (req, res) => {
+async function handleDownload(req: Request, res: Response) {
   try {
-    const paramId = String(req.params.id);
+    const paramId = String(req.params.id || req.query.id || "");
+    if (!paramId) {
+      return res.status(400).json({ error: "Template ID is required" });
+    }
+
     const template = await prisma.noticeTemplate.findFirst({
       where: {
         tenantId: req.auth!.tenantId,
@@ -207,7 +219,11 @@ router.get("/:id/download", authMiddleware, tenantMiddleware, async (req, res) =
   } catch (error: any) {
     return res.status(500).json({ error: error.message || "Failed to download template" });
   }
-});
+}
+
+router.get("/:id/download", authMiddleware, tenantMiddleware, handleDownload);
+router.get("/download/:id", authMiddleware, tenantMiddleware, handleDownload);
+router.get("/download", authMiddleware, tenantMiddleware, handleDownload);
 
 // ─────────────────────────────────────────────
 // DELETE /api/templates/:id

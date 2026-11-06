@@ -93,7 +93,13 @@ async function parseApiResponse<T>(res: Response, fallbackError: string): Promis
         errMsg = Object.values(errObj.error.fieldErrors).flat().join(". ");
       }
     } else {
-      errMsg = `Request failed (${res.status}: ${res.statusText || fallbackError})`;
+      let urlPath = "";
+      try {
+        urlPath = new URL(res.url).pathname;
+      } catch {
+        urlPath = res.url;
+      }
+      errMsg = `${fallbackError} (${res.status} from ${urlPath})`;
     }
     throw new Error(errMsg);
   }
@@ -303,16 +309,37 @@ export async function apiGetTemplates(): Promise<Template[]> {
 }
 
 export async function apiGetTemplatePreview(id: string): Promise<TemplatePreview> {
-  const res = await fetch(`${BASE_URL}/api/templates/${encodeURIComponent(id)}/preview`, {
+  const encId = encodeURIComponent(id);
+  let res = await fetch(`${BASE_URL}/api/templates/${encId}/preview`, {
     headers: { ...authHeaders() },
   });
+
+  if (res.status === 404) {
+    const altRes = await fetch(`${BASE_URL}/api/templates/preview/${encId}`, {
+      headers: { ...authHeaders() },
+    });
+    if (altRes.ok) {
+      res = altRes;
+    }
+  }
+
   return parseApiResponse<TemplatePreview>(res, "Failed to load template preview");
 }
 
 export async function apiDownloadTemplate(id: string, filename: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/api/templates/${encodeURIComponent(id)}/download`, {
+  const encId = encodeURIComponent(id);
+  let res = await fetch(`${BASE_URL}/api/templates/${encId}/download`, {
     headers: { ...authHeaders() },
   });
+
+  if (res.status === 404) {
+    const altRes = await fetch(`${BASE_URL}/api/templates/download/${encId}`, {
+      headers: { ...authHeaders() },
+    });
+    if (altRes.ok) {
+      res = altRes;
+    }
+  }
 
   if (!res.ok) {
     await parseApiResponse(res, "Failed to download template");
