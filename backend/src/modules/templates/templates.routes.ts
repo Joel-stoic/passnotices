@@ -14,7 +14,6 @@ import { downloadFromR2 } from "../../lib/storage";
 
 const router = Router();
 
-// Helper to fetch buffer from R2 with local disk fallback
 async function getFileBuffer(fileUrl: string): Promise<Buffer> {
   try {
     return await downloadFromR2(fileUrl);
@@ -25,13 +24,10 @@ async function getFileBuffer(fileUrl: string): Promise<Buffer> {
     if (fs.existsSync(localPath)) {
       return fs.readFileSync(localPath);
     }
-    throw new Error(
-      `File not accessible in storage: ${r2Err?.message || "Storage error"}`
-    );
+    throw new Error(`File not accessible in storage: ${r2Err?.message || "Storage error"}`);
   }
 }
 
-// Use memory storage — no disk needed since we upload directly to R2
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -43,10 +39,7 @@ const upload = multer({
   },
 });
 
-// ─────────────────────────────────────────────
 // GET /api/templates
-// ─────────────────────────────────────────────
-
 router.get("/", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
     const templates = await prisma.noticeTemplate.findMany({
@@ -59,44 +52,46 @@ router.get("/", authMiddleware, tenantMiddleware, async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────
 // POST /api/templates
-// ─────────────────────────────────────────────
-
-router.post(
-  "/",
-  authMiddleware,
-  tenantMiddleware,
-  upload.single("file"),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "Word template file is required" });
-      }
-
-      const parsed = templateUploadSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ error: parsed.error.flatten() });
-      }
-
-      const template = await createTemplate(
-        req.auth!.tenantId,
-        parsed.data.noticeType,
-        req.file
-      );
-
-      return res.status(201).json({ success: true, template });
-    } catch (error: any) {
-      return res.status(400).json({ error: error.message || "Template upload failed" });
+router.post("/", authMiddleware, tenantMiddleware, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "Word template file is required" });
     }
+    const parsed = templateUploadSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.flatten() });
+    }
+    const template = await createTemplate(req.auth!.tenantId, parsed.data.noticeType, req.file);
+    return res.status(201).json({ success: true, template });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message || "Template upload failed" });
   }
-);
+});
 
-// ─────────────────────────────────────────────
-// Handler: Template Preview
-// Supports /:id/preview, /preview/:id, and /preview?id=
-// ─────────────────────────────────────────────
+// DEBUG /api/templates/debug/:id
+router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
+  try {
+    const template = await prisma.noticeTemplate.findFirst({
+      where: { id: req.params.id, tenantId: req.auth!.tenantId },
+    });
+    if (!template) return res.json({ found: false });
 
+    let r2Result = "unknown";
+    try {
+      const buf = await downloadFromR2(template.fileUrl);
+      r2Result = `OK — ${buf.length} bytes`;
+    } catch (e: any) {
+      r2Result = `FAILED — ${e.message}`;
+    }
+
+    return res.json({ template, r2Result });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// PREVIEW handler
 async function handlePreview(req: Request, res: Response) {
   try {
     const paramId = String(req.params.id || req.query.id || "");
@@ -105,13 +100,7 @@ async function handlePreview(req: Request, res: Response) {
     }
 
     const template = await prisma.noticeTemplate.findFirst({
-      where: {
-        tenantId: req.auth!.tenantId,
-        OR: [
-          { id: paramId },
-          { noticeType: paramId },
-        ],
-      },
+      where: { id: paramId, tenantId: req.auth!.tenantId },
     });
 
     if (!template) {
@@ -134,7 +123,6 @@ async function handlePreview(req: Request, res: Response) {
       const zip = new PizZip(buffer);
       const documentXml = zip.files["word/document.xml"]?.asText() || "";
 
-      // Extract readable paragraphs from docx XML
       text = documentXml
         .replace(/<w:p[^>]*>/g, "")
         .replace(/<\/w:p>/g, "\n\n")
@@ -148,7 +136,6 @@ async function handlePreview(req: Request, res: Response) {
         .replace(/&apos;/g, "'")
         .trim();
 
-      // Extract dynamic placeholders {{...}}
       const matches = Array.from(text.matchAll(/\{\{([^{}]+)\}\}/g)).map((m) => m[1].trim());
       placeholders = Array.from(new Set(matches)).filter(Boolean);
     } catch (parseErr) {
@@ -170,32 +157,11 @@ async function handlePreview(req: Request, res: Response) {
   }
 }
 
-router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
-  const template = await prisma.noticeTemplate.findFirst({
-    where: { id: req.params.id, tenantId: req.auth!.tenantId },
-  });
-  if (!template) return res.json({ found: false });
-
-  let r2Result = "unknown";
-  try {
-    const buf = await downloadFromR2(template.fileUrl);
-    r2Result = `OK — ${buf.length} bytes`;
-  } catch (e: any) {
-    r2Result = `FAILED — ${e.message}`;
-  }
-
-  return res.json({ template, r2Result });
-});
-
 router.get("/:id/preview", authMiddleware, tenantMiddleware, handlePreview);
 router.get("/preview/:id", authMiddleware, tenantMiddleware, handlePreview);
 router.get("/preview", authMiddleware, tenantMiddleware, handlePreview);
 
-// ─────────────────────────────────────────────
-// Handler: Template Download
-// Supports /:id/download, /download/:id, and /download?id=
-// ─────────────────────────────────────────────
-
+// DOWNLOAD handler
 async function handleDownload(req: Request, res: Response) {
   try {
     const paramId = String(req.params.id || req.query.id || "");
@@ -204,13 +170,7 @@ async function handleDownload(req: Request, res: Response) {
     }
 
     const template = await prisma.noticeTemplate.findFirst({
-      where: {
-        tenantId: req.auth!.tenantId,
-        OR: [
-          { id: paramId },
-          { noticeType: paramId },
-        ],
-      },
+      where: { id: paramId, tenantId: req.auth!.tenantId },
     });
 
     if (!template) {
@@ -228,10 +188,7 @@ async function handleDownload(req: Request, res: Response) {
 
     const filename = `${template.noticeType.toLowerCase().replace(/_/g, "-")}-template.docx`;
 
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    );
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.setHeader("Content-Length", buffer.length);
     return res.send(buffer);
@@ -244,10 +201,7 @@ router.get("/:id/download", authMiddleware, tenantMiddleware, handleDownload);
 router.get("/download/:id", authMiddleware, tenantMiddleware, handleDownload);
 router.get("/download", authMiddleware, tenantMiddleware, handleDownload);
 
-// ─────────────────────────────────────────────
 // DELETE /api/templates/:id
-// ─────────────────────────────────────────────
-
 router.delete("/:id", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
     await deleteTemplate(req.auth!.tenantId, String(req.params.id));
@@ -256,8 +210,5 @@ router.delete("/:id", authMiddleware, tenantMiddleware, async (req, res) => {
     return res.status(500).json({ error: error.message || "Failed to delete template" });
   }
 });
-
-
-
 
 export default router;
