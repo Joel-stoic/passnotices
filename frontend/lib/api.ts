@@ -58,13 +58,20 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+interface ApiErrorPayload {
+  error?: string | {
+    formErrors?: string[];
+    fieldErrors?: Record<string, string[]>;
+  };
+}
+
 /**
  * Safely parse JSON responses without throwing "Unexpected token '<'..."
  * if an HTML error page (e.g. 404, 502) is returned.
  */
 async function parseApiResponse<T>(res: Response, fallbackError: string): Promise<T> {
   const contentType = res.headers.get("content-type") || "";
-  let data: any = null;
+  let data: unknown = null;
 
   if (contentType.includes("application/json")) {
     try {
@@ -76,19 +83,22 @@ async function parseApiResponse<T>(res: Response, fallbackError: string): Promis
 
   if (!res.ok) {
     let errMsg = fallbackError;
-    if (typeof data?.error === "string") {
-      errMsg = data.error;
-    } else if (data?.error?.formErrors?.[0]) {
-      errMsg = data.error.formErrors[0];
-    } else if (data?.error?.fieldErrors) {
-      errMsg = Object.values(data.error.fieldErrors).flat().join(". ");
+    const errObj = data as ApiErrorPayload | null;
+    if (typeof errObj?.error === "string") {
+      errMsg = errObj.error;
+    } else if (typeof errObj?.error === "object" && errObj.error !== null) {
+      if (errObj.error.formErrors?.[0]) {
+        errMsg = errObj.error.formErrors[0];
+      } else if (errObj.error.fieldErrors) {
+        errMsg = Object.values(errObj.error.fieldErrors).flat().join(". ");
+      }
     } else {
       errMsg = `Request failed (${res.status}: ${res.statusText || fallbackError})`;
     }
     throw new Error(errMsg);
   }
 
-  return (data !== null ? data : ({} as any)) as T;
+  return (data !== null ? data : {}) as T;
 }
 
 // ─── Auth API calls ───────────────────────────────────────────────────────────
