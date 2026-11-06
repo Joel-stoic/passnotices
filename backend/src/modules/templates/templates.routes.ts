@@ -94,7 +94,7 @@ router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
 // PREVIEW handler
 async function handlePreview(req: Request, res: Response) {
   try {
-    const paramId = String(req.params.id || req.query.id || "");
+    const paramId = req.params.id || (req.query.id as string) || "";
     if (!paramId) {
       return res.status(400).json({ error: "Template ID is required" });
     }
@@ -164,7 +164,7 @@ router.get("/preview", authMiddleware, tenantMiddleware, handlePreview);
 // DOWNLOAD handler
 async function handleDownload(req: Request, res: Response) {
   try {
-    const paramId = String(req.params.id || req.query.id || "");
+    const paramId = req.params.id || (req.query.id as string) || "";
     if (!paramId) {
       return res.status(400).json({ error: "Template ID is required" });
     }
