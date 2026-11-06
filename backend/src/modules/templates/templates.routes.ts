@@ -170,6 +170,23 @@ async function handlePreview(req: Request, res: Response) {
   }
 }
 
+router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
+  const template = await prisma.noticeTemplate.findFirst({
+    where: { id: req.params.id, tenantId: req.auth!.tenantId },
+  });
+  if (!template) return res.json({ found: false });
+
+  let r2Result = "unknown";
+  try {
+    const buf = await downloadFromR2(template.fileUrl);
+    r2Result = `OK — ${buf.length} bytes`;
+  } catch (e: any) {
+    r2Result = `FAILED — ${e.message}`;
+  }
+
+  return res.json({ template, r2Result });
+});
+
 router.get("/:id/preview", authMiddleware, tenantMiddleware, handlePreview);
 router.get("/preview/:id", authMiddleware, tenantMiddleware, handlePreview);
 router.get("/preview", authMiddleware, tenantMiddleware, handlePreview);
@@ -241,21 +258,6 @@ router.delete("/:id", authMiddleware, tenantMiddleware, async (req, res) => {
 });
 
 
-router.get("/debug/:id", authMiddleware, tenantMiddleware, async (req, res) => {
-  const template = await prisma.noticeTemplate.findFirst({
-    where: { id: req.params.id, tenantId: req.auth!.tenantId },
-  });
-  if (!template) return res.json({ found: false });
 
-  let r2Result = "unknown";
-  try {
-    const buf = await downloadFromR2(template.fileUrl);
-    r2Result = `OK — ${buf.length} bytes`;
-  } catch (e: any) {
-    r2Result = `FAILED — ${e.message}`;
-  }
-
-  return res.json({ template, r2Result });
-});
 
 export default router;
