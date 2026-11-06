@@ -41,7 +41,11 @@ app.use("/api/notices", notices_routes_1.default);
 app.use("/api/gmail", gmail_routes_1.default);
 // Health check
 app.get("/health", (_req, res) => {
-    res.json({ status: "ok" });
+    res.json({
+        status: "ok",
+        version: "2.1.0",
+        templatesApi: true,
+    });
 });
 // 404 Catch-all for API routes — always return JSON, never HTML
 app.use("/api", (req, res) => {

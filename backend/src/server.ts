@@ -45,7 +45,11 @@ app.use("/api/gmail", gmailRouter);
 
 // Health check
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+  res.json({
+    status: "ok",
+    version: "2.1.0",
+    templatesApi: true,
+  });
 });
 
 // 404 Catch-all for API routes — always return JSON, never HTML
