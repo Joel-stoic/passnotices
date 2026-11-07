@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authMiddleware } from "../../middleware/auth.middleware";
 import { tenantMiddleware } from "../../middleware/tenant.middleware";
 import { generateNoticeSchema, generateBulkSchema } from "./notices.validation";
-import { generateNotice, generateBulkNotices, generateAndSendAll } from "./notices.service";
+import { generateNotice, generateBulkNotices, validateTemplateVsExcel, runBulkJob } from "./notices.service";
 import { prisma } from "../../lib/prisma";
 import { downloadFromR2 } from "../../lib/storage";
 import { bulkSendQueue } from "../../lib/queue";
@@ -44,7 +44,7 @@ router.post("/generate-bulk", authMiddleware, tenantMiddleware, async (req, res)
   }
 });
 
-// POST /api/notices/generate-and-send-all — fire and forget
+// POST /api/notices/generate-and-send-all
 router.post("/generate-and-send-all", authMiddleware, tenantMiddleware, async (req, res) => {
   try {
     const parsed = generateBulkSchema.safeParse(req.body);
@@ -55,18 +55,85 @@ router.post("/generate-and-send-all", authMiddleware, tenantMiddleware, async (r
     const tenantId = req.auth!.tenantId;
     const { noticeType, batchId } = parsed.data;
 
-    // Respond immediately
-    res.status(200).json({
-      success: true,
-      message: "Bulk send started. Emails will be sent in the background.",
+    // Concurrency guard — one job at a time per tenant
+    const activeJob = await prisma.bulkJob.findFirst({
+      where: { tenantId, status: { in: ["PENDING", "RUNNING"] } },
+    });
+    if (activeJob) {
+      return res.status(400).json({
+        error: "A bulk send is already in progress.",
+        jobId: activeJob.id,
+      });
+    }
+
+    // Count clients
+    const total = await prisma.client.count({
+      where: { tenantId, ...(batchId ? { batchId } : {}) },
+    });
+    if (total === 0) {
+      return res.status(400).json({ error: "No clients found. Upload an Excel file first." });
+    }
+
+    // Create DB job record
+    const job = await prisma.bulkJob.create({
+      data: { tenantId, noticeType, batchId: batchId ?? null, total },
     });
 
-    // Process in background
-    generateAndSendAll(tenantId, noticeType, batchId).catch((err) => {
-      console.error(`[BulkSend] Failed for tenant ${tenantId}:`, err.message);
+    // Add to Redis queue
+    await bulkSendQueue.add("send", { jobId: job.id }, {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 5000 },
+    });
+
+    return res.status(200).json({
+      success: true,
+      jobId: job.id,
+      message: `Bulk send queued for ${total} clients.`,
     });
   } catch (error: any) {
-    return res.status(400).json({ error: error.message || "Bulk generate and send failed" });
+    return res.status(400).json({ error: error.message || "Bulk send failed" });
+  }
+});
+
+// GET /api/notices/job-status/:jobId
+router.get("/job-status/:jobId", authMiddleware, tenantMiddleware, async (req, res) => {
+  try {
+    const job = await prisma.bulkJob.findFirst({
+      where: {
+        id: String(req.params.jobId),
+        tenantId: req.auth!.tenantId,
+      },
+    });
+
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    return res.json({
+      success: true,
+      jobId: job.id,
+      status: job.status,
+      total: job.total,
+      succeeded: job.succeeded,
+      skipped: job.skipped,
+      failed: job.failed,
+      error: job.error,
+      updatedAt: job.updatedAt,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to fetch job status" });
+  }
+});
+
+// POST /api/notices/validate
+router.post("/validate", authMiddleware, tenantMiddleware, async (req, res) => {
+  try {
+    const { noticeType } = req.body;
+    if (!noticeType) return res.status(400).json({ error: "noticeType is required" });
+    const result = await validateTemplateVsExcel(req.auth!.tenantId, noticeType);
+    return res.json({ success: true, ...result });
+  } catch (error: any) {
+    return res.status(400).json({ error: error.message });
   }
 });
 
@@ -124,56 +191,6 @@ router.get("/download/:noticeId", authMiddleware, tenantMiddleware, async (req, 
     return res.send(buffer);
   } catch (error) {
     return res.status(500).json({ error: "Failed to download notice" });
-  }
-});
-
-router.post("/generate-and-send-all", authMiddleware, tenantMiddleware, async (req, res) => {
-  try {
-    const parsed = generateBulkSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.flatten() });
-    }
-
-    const tenantId = req.auth!.tenantId;
-    const { noticeType, batchId } = parsed.data;
-
-    // Concurrency guard — one job at a time per tenant
-    const activeJob = await prisma.bulkJob.findFirst({
-      where: { tenantId, status: { in: ["PENDING", "RUNNING"] } },
-    });
-    if (activeJob) {
-      return res.status(400).json({
-        error: "A bulk send is already in progress.",
-        jobId: activeJob.id,
-      });
-    }
-
-    // Count clients
-    const total = await prisma.client.count({
-      where: { tenantId, ...(batchId ? { batchId } : {}) },
-    });
-    if (total === 0) {
-      return res.status(400).json({ error: "No clients found. Upload an Excel file first." });
-    }
-
-    // Create DB job record
-    const job = await prisma.bulkJob.create({
-      data: { tenantId, noticeType, batchId: batchId ?? null, total },
-    });
-
-    // Add to Redis queue
-    await bulkSendQueue.add("send", { jobId: job.id }, {
-      attempts: 3,
-      backoff: { type: "exponential", delay: 5000 },
-    });
-
-    return res.status(200).json({
-      success: true,
-      jobId: job.id,
-      message: `Bulk send queued for ${total} clients.`,
-    });
-  } catch (error: any) {
-    return res.status(400).json({ error: error.message || "Bulk send failed" });
   }
 });
 

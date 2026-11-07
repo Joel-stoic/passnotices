@@ -3,9 +3,8 @@ import Docxtemplater from "docxtemplater";
 import { prisma } from "../../lib/prisma";
 import { uploadToR2, downloadFromR2 } from "../../lib/storage";
 import { sendNoticeViaGmail } from "../gmail/gmail.service";
-import { bulkSendQueue } from "../../lib/queue";
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────  
 // Helpers
 // ─────────────────────────────────────────────
 
@@ -313,4 +312,90 @@ export async function generateAndSendAll(
   const skipped = results.filter((r) => r.status === "skipped").length;
   const failed = results.filter((r) => r.status === "error").length;
   return { total: clients.length, succeeded, skipped, failed, results };
+}
+
+// ─────────────────────────────────────────────
+// Run bulk job — called by queue worker
+// ─────────────────────────────────────────────
+
+export async function runBulkJob(jobId: string) {
+  const job = await prisma.bulkJob.findUnique({ where: { id: jobId } });
+  if (!job) throw new Error("Job not found");
+
+  await prisma.bulkJob.update({
+    where: { id: jobId },
+    data: { status: "RUNNING" },
+  });
+
+  try {
+    const clients = await prisma.client.findMany({
+      where: {
+        tenantId: job.tenantId,
+        ...(job.batchId ? { batchId: job.batchId } : {}),
+      },
+    });
+
+    const gmailAccount = await prisma.gmailAccount.findUnique({
+      where: { tenantId: job.tenantId },
+    });
+    if (!gmailAccount) throw new Error("Gmail not connected.");
+
+    let succeeded = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const client of clients) {
+      if (!client.email) {
+        skipped++;
+        await prisma.bulkJob.update({
+          where: { id: jobId },
+          data: { skipped },
+        });
+        continue;
+      }
+
+      try {
+        // Duplicate prevention — skip if already sent
+        const existing = await prisma.notice.findFirst({
+          where: {
+            clientId: client.id,
+            tenantId: job.tenantId,
+            emailStatus: "SENT",
+          },
+        });
+        if (existing) {
+          skipped++;
+          await prisma.bulkJob.update({
+            where: { id: jobId },
+            data: { skipped },
+          });
+          continue;
+        }
+
+        const notice = await generateNotice(job.tenantId, client.id, job.noticeType);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await sendNoticeViaGmail(job.tenantId, notice.id);
+        succeeded++;
+      } catch {
+        failed++;
+      }
+
+      // Update progress after every client
+      await prisma.bulkJob.update({
+        where: { id: jobId },
+        data: { succeeded, skipped, failed },
+      });
+    }
+
+    await prisma.bulkJob.update({
+      where: { id: jobId },
+      data: { status: "DONE", succeeded, skipped, failed },
+    });
+  } catch (err: any) {
+    await prisma.bulkJob.update({
+      where: { id: jobId },
+      data: { status: "FAILED", error: err.message },
+    });
+    throw err; // rethrow so BullMQ knows the job failed and can retry
+  }
 }
