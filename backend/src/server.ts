@@ -8,6 +8,8 @@ import excelRouter from "./modules/excel/excel.routes";
 import templateRouter from "./modules/templates/templates.routes";
 import noticeRouter from "./modules/notices/notices.routes";
 import gmailRouter from "./modules/gmail/gmail.routes";
+import { prisma } from "./lib/prisma";
+import "./lib/queue"; // starts the worker
 
 const app = express();
 
@@ -52,18 +54,25 @@ app.get("/health", (_req, res) => {
   });
 });
 
-// 404 Catch-all for API routes — always return JSON, never HTML
+// 404 Catch-all
 app.use("/api", (req, res) => {
   res.status(404).json({ error: `API route not found: ${req.method} ${req.originalUrl}` });
 });
 
-// Global error handler — never expose internals to client
+// Global error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Something went wrong. Please try again." });
 });
 
 const PORT = Number(process.env.PORT) || 4000;
-app.listen(PORT, "0.0.0.0", () => {
+
+app.listen(PORT, "0.0.0.0", async () => {
+  // Recover stuck jobs on startup
+  await prisma.bulkJob.updateMany({
+    where: { status: "RUNNING" },
+    data: { status: "FAILED", error: "Server restarted while job was running" },
+  });
   console.log(`Server running on port ${PORT}`);
+  console.log("Queue worker started");
 });
