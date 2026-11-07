@@ -118,6 +118,25 @@ model Notice {
   @@map("notices")
 }
 
+model BulkJob {
+  id         String    @id @default(cuid())
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  noticeType String
+  batchId    String?
+  status     JobStatus @default(PENDING)
+  total      Int       @default(0)
+  succeeded  Int       @default(0)
+  skipped    Int       @default(0)
+  failed     Int       @default(0)
+  error      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@map("bulk_jobs")
+}
+
 model Batch {
   id        String   @id @default(cuid())
   tenantId  String
@@ -135,6 +154,13 @@ enum NoticeStatus {
   DRAFT
   GENERATED
   REVIEWED
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
 }
 
 enum SendStatus {
