@@ -25,6 +25,7 @@ model Tenant {
   gmailAccount GmailAccount?
   whatsappAccount WhatsappAccount?
   batches  Batch[] 
+  bulkJobs BulkJob[] 
   @@map("tenants")
 }
 
