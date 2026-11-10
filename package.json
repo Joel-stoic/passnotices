@@ -2,7 +2,7 @@
   "name": "passnotices-monorepo",
   "private": true,
   "scripts": {
-    "build": "cd backend && npm install && npx prisma db push && npx prisma generate && npm run build",
+    "build":"cd backend && npm install && npx prisma db push && npx prisma generate && tsc",
     "start": "cd backend && npm start"
   }
 }

@@ -2,26 +2,17 @@ import { Queue, Worker, Job } from "bullmq";
 import IORedis from "ioredis";
 import { runBulkJob } from "../modules/notices/notices.service";
 
-// ─────────────────────────────────────────────
-// Redis connection
-// ─────────────────────────────────────────────
+const redisUrl = process.env.UPSTASH_REDIS_URL;
+if (!redisUrl) throw new Error("UPSTASH_REDIS_URL is not set");
 
-export const redisConnection = new IORedis(process.env.UPSTASH_REDIS_URL!, {
+export const redisConnection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   tls: { rejectUnauthorized: false },
 });
 
-// ─────────────────────────────────────────────
-// Queue
-// ─────────────────────────────────────────────
-
 export const bulkSendQueue = new Queue("bulk-send", {
   connection: redisConnection,
 });
-
-// ─────────────────────────────────────────────
-// Worker — processes jobs from the queue
-// ─────────────────────────────────────────────
 
 export const bulkSendWorker = new Worker(
   "bulk-send",
@@ -31,7 +22,7 @@ export const bulkSendWorker = new Worker(
   },
   {
     connection: redisConnection,
-    concurrency: 1, // one job at a time per tenant
+    concurrency: 1,
   }
 );
 

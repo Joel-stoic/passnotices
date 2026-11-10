@@ -68,11 +68,14 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 const PORT = Number(process.env.PORT) || 4000;
 
 app.listen(PORT, "0.0.0.0", async () => {
-  // Recover stuck jobs on startup
-  await prisma.bulkJob.updateMany({
-    where: { status: "RUNNING" },
-    data: { status: "FAILED", error: "Server restarted while job was running" },
-  });
+  try {
+    await prisma.bulkJob.updateMany({
+      where: { status: "RUNNING" },
+      data: { status: "FAILED", error: "Server restarted" },
+    });
+  } catch (err: any) {
+    console.warn("Could not recover stuck jobs:", err.message);
+  }
   console.log(`Server running on port ${PORT}`);
   console.log("Queue worker started");
 });
