@@ -8,6 +8,8 @@ if (!redisUrl) throw new Error("UPSTASH_REDIS_URL is not set");
 export const redisConnection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   tls: { rejectUnauthorized: false },
+  enableOfflineQueue: false,
+  retryStrategy: (times) => Math.min(times * 500, 5000),
 });
 
 export const bulkSendQueue = new Queue("bulk-send", {
